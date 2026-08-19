@@ -1,0 +1,14 @@
+---
+description: Repository conventions for authoring portable agent skills.
+alwaysApply: true
+---
+
+Follow `AGENTS.md` at the repository root. It is the authoritative contributor guide for
+this repo: skill layout, frontmatter rules, validation commands, and installer behavior.
+
+Before finishing any change run:
+
+```bash
+python3 scripts/validate.py
+python3 scripts/install.py --all --dry-run
+```

@@ -15,6 +15,15 @@ scripts/install.py                # symlink/copy skills into agent homes
 scripts/new_skill.py              # scaffold a new skill
 ```
 
+## Agent instructions
+
+`AGENTS.md` at the repo root is the contributor guide for agents working *in* this repo.
+`CLAUDE.md`, `GEMINI.md`, and `.windsurfrules` are symlinks to it, and
+`.cursor/rules/repo.mdc` points at it, so every agent reads one source of truth.
+
+Do not confuse this with `skills/` — those are the portable skills this repo ships to
+other projects.
+
 ## SKILL.md format
 
 YAML frontmatter, then Markdown body:
