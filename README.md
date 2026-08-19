@@ -1,6 +1,6 @@
 # skills
 
-Portable agent skills: one source of truth, installable into Jcode, Claude Code, Codex,
+Portable agent skills: one source of truth, installable into Claude Code, Codex,
 Windsurf, Cursor, and any other agent that reads Markdown instructions.
 
 ## Layout
@@ -33,7 +33,7 @@ YAML frontmatter, then Markdown body:
 name: my-skill              # kebab-case, matches directory name
 description: When the user wants X. Also use when the user mentions "x", "y".
 version: 0.1.0
-agents: [jcode, claude, codex, windsurf, cursor]   # or [all]
+agents: [claude, codex, windsurf, cursor]   # or [all]
 tags: [category]
 allowed-tools: [Bash, Read, Write]   # optional hint
 ---
@@ -59,7 +59,6 @@ Symlinks are the default so edits in this repo take effect immediately.
 
 | Agent | Path |
 | --- | --- |
-| jcode | `~/.jcode/skills/<name>` |
 | claude | `~/.claude/skills/<name>` |
 | codex | `~/.codex/skills/<name>` |
 | windsurf | `~/.codeium/windsurf/skills/<name>` |
