@@ -12,9 +12,6 @@ them over the multi-command REST sequences below.
 | Job | Do this (1 call) | Not this |
 | --- | --- | --- |
 | Review context | `scripts/pr_context.sh <owner/repo> <n>` | `gh pr view` + `gh pr checks` + `gh pr view --json files` |
-| Read threads | `scripts/fetch_threads.sh <owner/repo> <n>` | `gh api .../comments --paginate` then a REST call per thread |
-| Reply + resolve | `scripts/reply_thread.sh <id> "..." --resolve` | reply call, then a separate resolve call |
-| Close N threads | `scripts/resolve_thread.sh <id1> <id2> <id3>` | a `for` loop calling resolve N times |
 | Full file context | `gh pr checkout <n>` once, then read locally | one API content fetch per file |
 
 ## Reading a PR
@@ -51,7 +48,8 @@ gh api repos/<owner/repo>/pulls/<n>/comments --paginate \
 gh pr view <n> --json commits --jq '.commits[].messageHeadline'
 ```
 
-Resolution state exists only in GraphQL; REST cannot tell you if a thread is resolved.
+Resolution state exists only in GraphQL; `pr_context.sh` already reports unresolved
+threads. To reply to or resolve threads, use the `address-review` skill.
 
 ## Posting a review
 
@@ -89,32 +87,6 @@ For many comments, build the payload as JSON and send it once:
 gh api repos/<owner/repo>/pulls/<n>/reviews --input /tmp/review.json
 ```
 
-## Threads: reply and resolve
-
-```bash
-bash scripts/fetch_threads.sh <owner/repo> <n>                 # unresolved, TAB-separated
-bash scripts/fetch_threads.sh <owner/repo> <n> --all --full    # everything, unclipped
-bash scripts/reply_thread.sh <threadId> "Fixed in abc1234 — added the null guard." --resolve
-bash scripts/resolve_thread.sh <id1> <id2> <id3>               # one batched mutation
-bash scripts/resolve_thread.sh <threadId> --undo
-```
-
-`resolve_thread.sh` also reads IDs from stdin, so it chains directly:
-
-```bash
-bash scripts/fetch_threads.sh <owner/repo> <n> | cut -f1 | bash scripts/resolve_thread.sh
-```
-
-`threadId` is an opaque node ID (`PRRT_...`), not the numeric comment id.
-
-## Pushing fixes
-
-```bash
-git add -A && git commit -m "Guard against a null session in the auth middleware" && git push
-```
-
-Never force-push a shared branch unless the user asks explicitly.
-
 ## Failure modes
 
 | Symptom | Cause | Fix |
@@ -122,6 +94,5 @@ Never force-push a shared branch unless the user asks explicitly.
 | `gh: Not Found` | Wrong slug or no access | Pass `-R <owner/repo>`, check `gh auth status` |
 | Inline comment rejected | Line not part of the diff | Comment on a diff line, or use the summary body |
 | `Resource not accessible` | Token lacks scope | `gh auth refresh -s repo` |
-| Thread reply 404 | Numeric id used as `threadId` | Re-fetch node IDs via `fetch_threads.sh` |
-| `FORBIDDEN` on resolve | No write access to the repo | Reply only; leave resolution to a maintainer |
-| Batched mutation partly null | Some IDs invalid | Check the `errors[].path` alias (`t0`, `t1`) to see which |
+| `FORBIDDEN` posting a review | No write access to the repo | Report findings to the user instead |
+| Review rejected wholesale | One inline comment had a bad line | Drop that comment, resubmit the batch |
