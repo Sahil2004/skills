@@ -35,39 +35,47 @@ If both apply, do Mode A first, then offer Mode B.
 ## Prerequisites
 
 ```bash
-gh auth status                      # must be logged in
-gh pr view <n> --json number,title,state,author,headRefName,baseRefName
+gh auth status    # must be logged in
 ```
 
 If `gh` is missing or unauthenticated, stop and tell the user; do not guess at PR content.
+
+**Command economy is a hard requirement.** Every script here batches into a single API
+call. Never poll, never loop a command per file or per thread, and never dump raw JSON
+into context. See `references/gh-commands.md` for the anti-patterns to avoid.
 
 ---
 
 ## Mode A: reviewing a PR
 
-1. **Load the PR.**
+1. **Load the PR in one call.** Metadata, file churn, CI status, existing reviews, and
+   unresolved threads all come back from a single request:
 
    ```bash
-   gh pr view <n> --json title,body,author,additions,deletions,changedFiles,labels
-   gh pr diff <n> > /tmp/pr-<n>.diff
-   gh pr view <n> --json files --jq '.files[].path'
+   bash scripts/pr_context.sh <owner/repo> <n>
    ```
+
+   Then fetch the diff once and reuse it:
+
+   ```bash
+   gh pr diff <n> > /tmp/pr-<n>.diff
+   ```
+
+   Do not also run `gh pr view`, `gh pr checks`, or a per-file loop. `pr_context.sh`
+   already returned all of it.
 
 2. **Understand intent before judging code.** Read the PR description and linked issue.
    State in one line what the PR claims to do. If the description does not explain the
    change, that is the first review comment.
 
 3. **Read the diff in context, not in isolation.** For every non-trivial hunk, open the
-   full file (`gh pr checkout <n>` when local context is needed). Reviewing only diff
-   lines produces false positives.
+   full file. Reviewing only diff lines produces false positives. When several files need
+   full context, run `gh pr checkout <n>` once and read locally rather than making an API
+   call per file.
 
-4. **Check CI and tests.**
-
-   ```bash
-   gh pr checks <n>
-   ```
-
-   Failing checks are blocking. A behavior change with no test change is a finding.
+4. **Check CI and tests.** The `## Checks` section of step 1 already lists only the
+   non-passing contexts. Failing checks are blocking. A behavior change with no test
+   change is a finding.
 
 5. **Apply the checklist.** Work through `references/review-checklist.md`: correctness,
    security, error handling, tests, API/back-compat, performance, readability. Skip
@@ -118,13 +126,15 @@ comment.
 
 ## Mode B: responding to and resolving reviews
 
-1. **Fetch every open thread**, including inline ones and their resolution state:
+1. **Fetch every open thread** in one call, with resolution state:
 
    ```bash
    bash scripts/fetch_threads.sh <owner/repo> <n>
    ```
 
-   This prints each unresolved thread with its `threadId`, file, line, author, and body.
+   One TAB-separated line per comment: `<threadId>  <path>:<line>  <author>: <body>`,
+   bodies clipped to 400 chars. Add `--full` only when a clipped comment is genuinely
+   ambiguous, `--all` to include resolved threads. Pipe with `cut -f1` to get bare IDs.
 
 2. **Group the comments** into: (a) will fix, (b) already correct / needs explanation,
    (c) out of scope / follow-up. Show the user this grouping before making edits when the
@@ -144,11 +154,18 @@ comment.
 
    Reference the reviewer's point in the message body, not the commit subject.
 
-6. **Reply to each thread**, then resolve only the ones actually addressed:
+6. **Reply and resolve in one call per thread.** `--resolve` performs the reply and the
+   resolution in a single request, so use it for anything you actually fixed:
 
    ```bash
-   bash scripts/reply_thread.sh <threadId> "Fixed in <sha> — <one line on what changed>."
-   bash scripts/resolve_thread.sh <threadId>
+   bash scripts/reply_thread.sh <threadId> "Fixed in <sha> — <what changed>." --resolve
+   ```
+
+   Omit `--resolve` when you are only explaining. To close out several already-answered
+   threads, batch them into one mutation instead of looping:
+
+   ```bash
+   bash scripts/resolve_thread.sh <id1> <id2> <id3>
    ```
 
 7. **Leave disagreements open.** If you did not make a change, reply with the reasoning
@@ -161,6 +178,8 @@ comment.
 
 - Never resolve a thread you did not address, and never resolve another reviewer's thread
   on a disagreement.
+- One API call per job. Use the batching scripts; never loop a command per file or thread,
+  and never re-fetch data `pr_context.sh` already returned.
 - Never force-push a shared PR branch without the user explicitly asking.
 - Never approve, merge, or close a PR unless the user asked for that exact action.
 - Quote the specific line and give a concrete fix; no vague feedback.
@@ -171,5 +190,14 @@ comment.
 ## References
 
 - `references/review-checklist.md` — the full per-category review checklist.
-- `references/gh-commands.md` — `gh` and GraphQL recipes for threads, inline comments,
-  and resolution state.
+- `references/gh-commands.md` — batched `gh`/GraphQL recipes, inline-comment API, and the
+  costly anti-patterns to avoid.
+
+## Scripts
+
+| Script | Calls | Purpose |
+| --- | --- | --- |
+| `scripts/pr_context.sh` | 1 | Whole review context: meta, files, checks, reviews, threads |
+| `scripts/fetch_threads.sh` | 1 | Threads as TAB lines; `--all`, `--full` |
+| `scripts/reply_thread.sh` | 1 | Reply, plus `--resolve` in the same call |
+| `scripts/resolve_thread.sh` | 1 | Resolve/unresolve many IDs in one mutation; reads stdin |
