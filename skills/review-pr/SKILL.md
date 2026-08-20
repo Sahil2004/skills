@@ -73,10 +73,12 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
    categories that genuinely do not apply.
 
 6. **Classify every finding** with a severity prefix so the author can triage:
-   - `blocker:` correctness, security, data loss, breaking change.
-   - `issue:` should be fixed before merge.
-   - `nit:` style or taste, non-blocking.
-   - `question:` you need information to judge.
+   - `blocker:` correctness, security, data loss, breaking change. Must be fixed.
+   - `suggestion:` should be fixed before merge, but not dangerous.
+   - `nitpick:` style or taste. Non-blocking, the author may decline.
+
+   An open question counts as a blocker or a suggestion depending on what it gates: use
+   `blocker:` when you cannot judge correctness without the answer.
 
 7. **Read what other reviewers already said** (in the step 1 output) and do not repeat an
    existing open comment. Add signal, not volume.
@@ -85,29 +87,22 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
 
    | Findings after step 5-6 | Verdict | Action |
    | --- | --- | --- |
-   | No blockers and no issues | **Clean** | Outcome A: approve, post no comments |
-   | Any blocker, issue, or open question | **Needs work** | Outcome B: post findings |
+   | Nothing at all | **Clean** | Outcome A: approve, post no comments |
+   | Any blocker, suggestion, or nitpick | **Needs work** | Outcome B: request changes |
 
-   Nits alone do not make a PR "needs work". Under a clean verdict, nits are not posted to
-   the PR at all; report them to the human instead (see Outcome A).
+   Any finding at all, down to a single nitpick, means Outcome B. Only a PR with nothing
+   to change is approved.
 
-9. **Act on the verdict.** Clean goes to Outcome A, everything else to Outcome B. Post
-   findings as one batched call:
+9. **Place each finding at the narrowest scope that fits**, then act on the verdict.
+   See "Comment placement" below for the three tiers and the exact API calls.
 
-   ```bash
-   gh pr review <n> --comment --body-file /tmp/review-<n>.md
-   ```
-
-   For line-anchored comments, submit them in a single `/reviews` request; see
-   `references/gh-commands.md`.
-
-10. **Never merge or close a PR.** Approving is allowed only under a clean verdict
-    (Outcome A); requesting changes needs the user to ask for it explicitly.
+10. **Never merge or close a PR.** Approve only under a clean verdict (Outcome A);
+    request changes under Outcome B.
 
 ## Outcome A: the PR is correct
 
-Use when there are no blockers and no issues. Approve the PR and leave **no review
-comments on it at all**.
+Use only when there is nothing to change at all: no blockers, no suggestions, no
+nitpicks. Approve the PR and leave **no review comments on it at all**.
 
 ```bash
 gh pr review <n> --approve
@@ -115,11 +110,12 @@ gh pr review <n> --approve
 
 That is the entire GitHub-side action. Specifically:
 
-- Post no summary body, no inline comments, and no nits to the PR. A correct PR gets a
-  clean approval and nothing else.
-- Do not open threads to note optional suggestions. If you noticed nits, they go in the
-  report to the human below, not onto the PR.
-- Never manufacture a concern to look thorough.
+- Post no summary body and no inline comments. A correct PR gets a clean approval and
+  nothing else.
+- If you found even one nitpick worth telling the author, this is not Outcome A. Use
+  Outcome B and post it.
+- Never manufacture a concern to look thorough, and never suppress a real one to reach a
+  clean approval.
 
 Then tell the human, in chat, that the PR is correct and what you verified:
 
@@ -135,7 +131,7 @@ The PR is correct according to everything I verified, and I checked all the case
 - Performance: <what you confirmed>
 - CI: <status>
 
-<Optional, chat only: any non-blocking nits I did not post to the PR.>
+<Optional, chat only: anything worth knowing that was not worth a review comment.>
 ```
 
 Rules for this shape:
@@ -150,49 +146,106 @@ Rules for this shape:
 
 ## Outcome B: the PR needs changes
 
-Use when there is at least one blocker, issue, or open question. Lead with the most
-severe finding.
+Use when there is **any** finding, including a lone nitpick. Request changes, and put each
+finding at the narrowest scope that fits it.
+
+### Severity vocabulary
+
+- **Blocker** — correctness, security, data loss, breaking change. Must be fixed.
+- **Suggestion** — should be fixed before merge, but not dangerous.
+- **Nitpick** — style or taste. Non-blocking, author may decline.
+
+### The main comment
+
+The review body leads with the counts, in this exact form:
 
 ```
-## Summary
-<what the PR does, 1-2 lines>
+Blockers: 2, Suggestions: 3, Nitpicks: 1
 
-**Verdict: needs changes.** <n> blocker(s), <n> issue(s). <one line on the main risk.>
+<one line on the main risk.>
 
-## Blockers
-- `path/file.ts:120` — <problem> → <concrete fix>
-
-## Issues
-- `path/file.ts:44` — <problem> → <concrete fix>
-
-## Questions
-- `path/file.ts:12` — <what you need to know to judge this>
-
-## Optional nits
-- <non-blocking suggestion>
+<Any general findings that belong to no file or line: PR scope, missing tests overall,
+architectural concerns, missing description. One bullet each.>
 ```
 
-Rules for this shape:
+Include every category in the count line even when zero (`Blockers: 0, Suggestions: 2,
+Nitpicks: 1`), so the author can see the shape of the review at a glance. Do not restate
+the per-line findings here; they live on the lines themselves.
 
-- Omit any section that is empty. Never print a header with "none" under it.
-- Every finding names a file and line and proposes a concrete fix. "This feels wrong" is
-  not a review comment.
-- Keep the severity honest: if nothing is truly blocking, there are no blockers, and the
-  verdict line should say so.
-- When the only findings are questions, say **"Verdict: needs info."** rather than
-  implying the code is wrong.
+### Comment placement
+
+| Scope of the finding | Where it goes | How |
+| --- | --- | --- |
+| Specific line(s) of code | Inline on those lines | `line` (+ `start_line` for a range) |
+| A file as a whole | On the file | `subject_type: file`, no `line` |
+| Neither: general or cross-cutting | The main review body | Bullet in the body |
+
+Choose the narrowest tier that is truthful. Do not push a line-specific finding up into
+the summary, and do not attach a general concern to an arbitrary line just to anchor it.
+
+### Committable suggestions
+
+When a fix is small and you can express it as the literal replacement text, use a
+`suggestion` block. GitHub renders it with an "Apply suggestion" button the author can
+commit in one click.
+
+````
+blocker: `user` may be nil here, so this dereferences on the logged-out path.
+
+```suggestion
+    if user == nil {
+        return ErrUnauthenticated
+    }
+    return user.Name
+```
+````
+
+Rules for suggestion blocks:
+
+- The block replaces **exactly** the commented line range, so the range must cover every
+  line you are rewriting and the replacement must be complete, compiling code.
+- Match the surrounding indentation exactly; the block is inserted verbatim.
+- Use one only when the fix is small and unambiguous. A refactor spanning several
+  functions is described in prose, not forced into a suggestion.
+- Never put a placeholder or `...` inside a suggestion block. It would be committed as-is.
+
+### Posting it
+
+Submit the whole review, body and all inline comments, in one call:
+
+```bash
+gh api repos/<owner/repo>/pulls/<n>/reviews --input /tmp/review-<n>.json
+```
+
+Build the payload with `event: REQUEST_CHANGES`, the count-led body, and one entry per
+finding. See `references/gh-commands.md` for the full JSON shape, including the
+`subject_type: file` form and suggestion-block escaping.
+
+### Rules for this shape
+
+- Every inline finding starts with its severity word: `blocker:`, `suggestion:`, or
+  `nitpick:`.
+- Every finding proposes a concrete fix. "This feels wrong" is not a review comment.
+- Keep severity honest in both directions: do not soften a blocker into a nitpick, and do
+  not inflate a nitpick to pad the counts.
+- The counts in the body must equal the findings actually posted.
+- When the only findings are open questions, request changes but say **"needs info"** in
+  the risk line rather than implying the code is wrong.
 
 ## Rules
 
 - One API call per job. Use `pr_context.sh`; never loop a command per file, and never
   re-fetch data it already returned.
-- Approve only under a clean verdict, and approve with no comments attached. Never merge
-  or close a PR, and never request changes unless the user asked for that action.
+- Approve only when there is nothing to change, and approve with no comments attached.
+  Any finding, down to one nitpick, is a request for changes. Never merge or close a PR.
 - Never approve to be agreeable. If any category is unverified or any doubt remains, that
   is Outcome B, not an approval.
+- Put every finding at the narrowest true scope: line, then file, then the review body.
 - Quote the specific line and give a concrete fix; no vague feedback.
-- Be direct about severity. Do not soften a blocker into a nit, and do not inflate a nit
-  into a blocker to justify a longer review.
+- Offer a committable `suggestion` block whenever the fix is small and unambiguous.
+- Be direct about severity. Do not soften a blocker into a nitpick, and do not inflate a
+  nitpick into a blocker to justify a longer review.
+- The counts in the review body must match the findings actually posted.
 - A clean PR gets a clean review. Finding nothing is a valid, complete result; never
   invent findings to fill the template.
 - Do not rewrite the PR author's style preferences as blockers.

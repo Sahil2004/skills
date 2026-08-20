@@ -54,42 +54,91 @@ unresolved, so read them from its output rather than making a second request.
 ## Posting a review
 
 ```bash
-gh pr review <n> --approve                              # clean verdict: no body, no comments
-gh pr review <n> --comment         --body-file /tmp/review.md
-gh pr review <n> --request-changes --body-file /tmp/review.md
+gh pr review <n> --approve                                    # clean verdict only
+gh api repos/<owner/repo>/pulls/<n>/reviews --input review.json   # findings
 ```
 
-A clean verdict is a bare `--approve` with no `--body` and no inline comments. Anything
-with findings uses `--comment`. Use `--request-changes` only when the user asks for it.
+A clean verdict is a bare `--approve` with no `--body` and no inline comments. Any finding
+at all, down to a single nitpick, is `REQUEST_CHANGES` submitted as one JSON payload.
 
-Approving is irreversible in the sense that it signals sign-off to the author and can
-unblock a merge, so never approve a PR with an unverified category.
+Approving signals sign-off to the author and can unblock a merge, so never approve a PR
+with an unverified category.
 
-### Inline comments: batch them into one review
+### The single batched payload
 
-Submit every inline comment with the summary in a single call. Do not post them one by one.
+Build the whole review as JSON and submit it once. Never post comments one at a time.
+
+```json
+{
+  "event": "REQUEST_CHANGES",
+  "body": "Blockers: 1, Suggestions: 1, Nitpicks: 0\n\nMain risk: the logged-out path dereferences a nil user.\n\n- The PR description does not explain the behavior change.",
+  "comments": [
+    {
+      "path": "pkg/auth/check.go",
+      "line": 20,
+      "side": "RIGHT",
+      "body": "blocker: `user` may be nil here.\n\n```suggestion\n\tif user == nil {\n\t\treturn ErrUnauthenticated\n\t}\n```"
+    },
+    {
+      "path": "pkg/auth/check.go",
+      "subject_type": "file",
+      "body": "suggestion: no test covers the new branch in this file."
+    }
+  ]
+}
+```
 
 ```bash
-gh api repos/<owner/repo>/pulls/<n>/reviews \
-  -f event=COMMENT \
-  -f body="Summary" \
-  -f 'comments[][path]=src/app.ts' \
-  -F 'comments[][line]=120' \
-  -f 'comments[][side]=RIGHT' \
-  -f 'comments[][body]=blocker: this dereferences a possibly-null value.' \
-  -f 'comments[][path]=src/db.ts' \
-  -F 'comments[][line]=44' \
-  -f 'comments[][body]=issue: query inside a loop, N+1.'
+gh api repos/<owner/repo>/pulls/<n>/reviews --input /tmp/review-<n>.json
 ```
 
-Use `start_line` with `line` for a multi-line range. `side=LEFT` targets the pre-change
-version. The line must exist in the diff or the API rejects the whole review.
+Generate the file with a script or heredoc rather than by hand; the bodies contain
+newlines and backticks that must be JSON-escaped.
 
-For many comments, build the payload as JSON and send it once:
+### The three placement tiers
+
+| Scope | Fields | Notes |
+| --- | --- | --- |
+| Specific line | `path`, `line`, `side` | `side=RIGHT` for additions/context, `LEFT` for deletions |
+| Line range | `path`, `start_line`, `start_side`, `line`, `side` | `start_line` is the first line of the range |
+| Whole file | `path`, `subject_type: "file"` | Omit `line` entirely |
+| General | none — goes in `body` | No `comments` entry at all |
+
+`subject_type: "file"` attaches the comment to the file rather than a line, which is the
+correct tier for "this file lacks tests" or "this whole module duplicates X".
+
+A line-anchored comment must land on a line present in the diff, or the API rejects the
+entire review with `422`.
+
+### Committable suggestion blocks
+
+A fenced ` ```suggestion ` block renders with an "Apply suggestion" button. The block
+replaces exactly the commented line range:
+
+````
+blocker: this dereferences a possibly-nil value.
+
+```suggestion
+    if user == nil {
+        return ErrUnauthenticated
+    }
+```
+````
+
+- Cover the full range you are rewriting with `start_line`/`line`, or the applied commit
+  will be wrong.
+- Reproduce the surrounding indentation exactly; the text is inserted verbatim.
+- Never include a placeholder or `...`; it would be committed literally.
+- In JSON, the block needs escaped newlines and literal backticks, as shown above.
+
+### Other events
 
 ```bash
-gh api repos/<owner/repo>/pulls/<n>/reviews --input /tmp/review.json
+gh pr review <n> --comment --body-file /tmp/notes.md    # feedback without a verdict
 ```
+
+Use `--comment` only when the user explicitly wants non-blocking notes instead of a
+verdict.
 
 ## Failure modes
 
@@ -100,3 +149,5 @@ gh api repos/<owner/repo>/pulls/<n>/reviews --input /tmp/review.json
 | `Resource not accessible` | Token lacks scope | `gh auth refresh -s repo` |
 | `FORBIDDEN` posting a review | No write access to the repo | Report findings to the user instead |
 | Review rejected wholesale | One inline comment had a bad line | Drop that comment, resubmit the batch |
+| `422` on a file comment | `line` sent alongside `subject_type: file` | Omit `line` for file-level comments |
+| Suggestion applies wrongly | Range did not cover every rewritten line | Widen `start_line`/`line` to the full range |
