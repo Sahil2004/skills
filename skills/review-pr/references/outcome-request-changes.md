@@ -50,7 +50,7 @@ bullets:
 - **Fix:** the specific change to make.
 ```
 
-Read `references/writing-comments.md` before writing them. It has the placement table,
+Read `writing-comments.md` before writing them. It has the placement table,
 the full bullet briefs, and the rules for committable `suggestion` blocks.
 
 ## Posting it
@@ -62,7 +62,7 @@ gh api repos/<owner/repo>/pulls/<n>/reviews --input /tmp/review-<n>.json
 ```
 
 Build the payload with `event: REQUEST_CHANGES`, the count-led body, and one entry per
-finding. See `references/gh-commands.md` for the full JSON shape, including the
+finding. See `gh-commands.md` for the full JSON shape, including the
 `subject_type: file` form and suggestion-block escaping.
 
 #

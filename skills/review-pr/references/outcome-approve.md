@@ -37,7 +37,7 @@ The PR is correct according to everything I verified, and I checked all the case
 
 Rules for this shape:
 
-- The chat report lists every checklist category from `references/review-checklist.md`
+- The chat report lists every checklist category from `review-checklist.md`
   that you examined, so "I verified all cases" is backed by specifics, not asserted bare.
 - Only claim a category if you actually checked it. If something was genuinely not
   applicable, say "n/a" and why rather than dropping it silently.

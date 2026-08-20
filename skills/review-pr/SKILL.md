@@ -98,8 +98,7 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
 
 ## Outcomes
 
-Exactly one applies. Read its file before acting; each has rules that are easy to get
-wrong. Do not read the other two.
+Exactly one applies. Read its file and follow it; do not read the other two.
 
 | Condition | Outcome | Read |
 | --- | --- | --- |
@@ -107,34 +106,8 @@ wrong. Do not read the other two.
 | CI green, nothing to change | **A** | `references/outcome-approve.md` |
 | CI green, any finding at all | **B** | `references/outcome-request-changes.md` |
 
-### C: CI is failing — overrides everything
-
-Request changes on the checks alone. Do not review the code. No counts line, no inline
-comments.
-
-```bash
-gh pr review <n> --request-changes --body "CI is failing. Please get the checks green, then I will review.
-
-- lint: FAILURE"
-```
-
-### A: nothing to change
-
-Approve with no comments attached, then report to the human in chat what you verified.
-
-```bash
-gh pr review <n> --approve
-```
-
-### B: any finding at all
-
-Request changes. The body is the counts, plus a bullet only for a finding that fits no
-line and no file. Everything else is placed inline or on a file. Submit the body and
-every comment in one call.
-
-```bash
-gh api repos/<owner/repo>/pulls/<n>/reviews --input /tmp/review-<n>.json
-```
+Outcome C overrides the others: a failing check ends the review whatever the diff looks
+like. Between A and B, a single nitpick is enough to make it B.
 
 ## Rules
 
