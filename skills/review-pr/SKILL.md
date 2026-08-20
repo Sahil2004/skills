@@ -1,7 +1,7 @@
 ---
 name: review-pr
 description: When the user wants to review someone's GitHub pull request, approve it, or leave feedback on it. Also use when the user mentions "review this PR", "code review", "look at this pull request", "what do you think of this PR", "approve this PR", "request changes", or pastes a GitHub pull request URL asking for an opinion.
-version: 0.3.0
+version: 0.1.0
 agents: [all]
 tags: [github, code-review, workflow]
 allowed-tools: [Bash, Read, Write, Edit]
