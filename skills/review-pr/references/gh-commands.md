@@ -58,6 +58,17 @@ gh pr review <n> --approve                                    # clean verdict on
 gh api repos/<owner/repo>/pulls/<n>/reviews --input review.json   # findings
 ```
 
+Check CI first. If `## Checks` lists any `FAIL`, the whole review is a short
+`--request-changes` naming those contexts, with no counts line and no `comments` array:
+
+```bash
+gh pr review <n> --request-changes --body "CI is failing. Please get the checks green, then I will review.
+
+- lint: FAILURE"
+```
+
+`PENDING` contexts are still running and never trigger this.
+
 A clean verdict is a bare `--approve` with no `--body` and no inline comments. Any finding
 at all, down to a single nitpick, is `REQUEST_CHANGES` submitted as one JSON payload.
 

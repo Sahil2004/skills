@@ -24,7 +24,7 @@ query($owner:String!, $name:String!, $pr:Int!) {
       files(first:100) { nodes { path additions deletions } }
       reviews(last:20) { nodes { author { login } state } }
       commits(last:1) { nodes { commit { statusCheckRollup {
-        state contexts(last:30) { nodes {
+        state contexts(first:100) { nodes {
           ... on CheckRun { name conclusion }
           ... on StatusContext { context state }
         } } } } } }
@@ -59,10 +59,16 @@ query($owner:String!, $name:String!, $pr:Int!) {
   else "rollup: \(.state)",
        ((.contexts.nodes
          | map(select((.conclusion // .state) as $s
-               | $s != null and ([$s] | inside(["SUCCESS","SKIPPED","NEUTRAL"]) | not))))
+               | $s != null and ([$s] | inside(["FAILURE","ERROR","TIMED_OUT","CANCELLED","ACTION_REQUIRED","STARTUP_FAILURE"])))))
         as $bad
+        | (.contexts.nodes
+           | map(select((.conclusion // .state) as $s
+                 | $s != null and ([$s] | inside(["PENDING","IN_PROGRESS","QUEUED","WAITING","REQUESTED"])))))
+          as $pending
         | if ($bad | length) == 0 then "  (no failing contexts)"
-          else ($bad[] | "  FAIL \(.name // .context): \(.conclusion // .state)") end)
+          else ($bad[] | "  FAIL \(.name // .context): \(.conclusion // .state)") end,
+          (if ($pending | length) == 0 then empty
+           else ($pending[] | "  PENDING \(.name // .context): \(.conclusion // .state)") end))
   end),
 "",
 "## Reviews",
