@@ -49,12 +49,12 @@ allowed-tools: [Bash, Read, Write]   # optional hint
 No clone required. With Node 16+:
 
 ```bash
-npx agent-skills-kit --all                       # every skill, every agent it declares
-npx agent-skills-kit --skill review-pr           # one skill
-npx agent-skills-kit --agent claude --all        # one agent
-npx agent-skills-kit --list                      # show skills and target directories
-npx agent-skills-kit --all --dry-run             # preview without writing
-npx agent-skills-kit --all --uninstall           # remove
+npx @sahil2004/skills --all                       # every skill, every agent it declares
+npx @sahil2004/skills --skill review-pr           # one skill
+npx @sahil2004/skills --agent claude --all        # one agent
+npx @sahil2004/skills --list                      # show skills and target directories
+npx @sahil2004/skills --all --dry-run             # preview without writing
+npx @sahil2004/skills --all --uninstall           # remove
 ```
 
 Straight from GitHub, without the registry:

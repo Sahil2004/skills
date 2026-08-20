@@ -1,5 +1,5 @@
 {
-  "name": "agent-skills-kit",
+  "name": "@sahil2004/skills",
   "version": "0.1.0",
   "description": "Portable agent skills installable into Claude Code, Codex, Jcode, Windsurf, Cursor, and opencode.",
   "bin": {
@@ -25,6 +25,9 @@
     "llm"
   ],
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Sahil2004/skills.git"
