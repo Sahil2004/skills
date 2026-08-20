@@ -39,30 +39,37 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
 ## Workflow
 
 1. **Load the PR in one call.** Metadata, file churn, CI status, existing reviews, and
- open threads all come back from a single request:
-  ```bash
+   open threads all come back from a single request:
+
+   ```bash
    bash scripts/pr_context.sh <owner/repo> <n>
-  ```
+   ```
 
    Then fetch the diff once and reuse it:
+
+   ```bash
+   gh pr diff <n> --repo <owner/repo> > /tmp/pr-<n>.diff
+   ```
 
    Do not also run `gh pr view`, `gh pr checks`, or a per-file loop. `pr_context.sh`
    already returned all of it.
 2. **Gate on CI before reviewing anything.** Read the `## Checks` section from step 1
- first. If any context is listed `FAIL`, stop immediately: do not read the diff, do not
- run the checklist, do not classify findings. Go straight to Outcome C below. A red
- build makes a line-by-line review premature, since the fix will change the diff.
- `PENDING` contexts are not failures; review normally and note anything still running.
-3. **Understand intent before judging code.** Read the PR description and linked issues. State in one line what the PR claims to do. If the description does not explain the change, that is the first review comment.
+   first. If any context is listed `FAIL`, stop immediately: do not read the diff, do not
+   run the checklist, do not classify findings. Go straight to Outcome C below. A red
+   build makes a line-by-line review premature, since the fix will change the diff.
+   `PENDING` contexts are not failures; review normally and note anything still running.
+3. **Understand intent before judging code.** Read the PR description and linked
+   issues. State in one line what the PR claims to do. If the description does not
+   explain the change, that is the first review comment.
 4. **Read the diff in context, not in isolation.** For every non-trivial hunk, open the
- full file. Reviewing only diff lines produces false positives. When several files need
- full context, run `gh pr checkout <n>` once and read locally rather than making an API
- call per file.
+   full file. Reviewing only diff lines produces false positives. When several files need
+   full context, run `gh pr checkout <n>` once and read locally rather than making an API
+   call per file.
 5. **Check tests.** CI is already green by step 2, so what remains is coverage: a
- behavior change with no test change is a finding.
+   behavior change with no test change is a finding.
 6. **Apply the checklist.** Work through `references/review-checklist.md`: correctness,
- security, error handling, tests, API/back-compat, performance, readability. Skip
- categories that genuinely do not apply.
+   security, error handling, tests, API/back-compat, performance, readability. Skip
+   categories that genuinely do not apply.
 7. **Classify every finding** with a severity prefix so the author can triage:
   - `[Blocker]` correctness, security, data loss, breaking change. Must be fixed.
   - `[Suggestion]` should be fixed before merge, but not dangerous.
@@ -71,7 +78,7 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
    An open question counts as a blocker or a suggestion depending on what it gates: use
    `[Blocker]` when you cannot judge correctness without the answer.
 8. **Read what other reviewers already said** (in the step 1 output) and do not repeat an
- existing open comment. Add signal, not volume.
+   existing open comment. Add signal, not volume.
 9. **Decide the verdict**, which determines what happens next:
   
   | State                               | Verdict        | Action                               |
@@ -84,7 +91,7 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
    Any finding at all, down to a single nitpick, means Outcome B. Only a PR with nothing
    to change is approved.
 10. **Place each finding at the narrowest scope that fits**, then act on the verdict.
- See "Comment placement" below for the three tiers and the exact API calls.
+    See "Comment placement" below for the three tiers and the exact API calls.
 11. **Never merge or close a PR.** Approve only under a clean verdict (Outcome A);
   request changes under Outcome B.
 
@@ -185,7 +192,8 @@ architectural concerns, missing description. One bullet each. Omit this whole
 block when every finding is placed inline or on a file.>
 ```
 
-Include every category in the count line even when zero (`Blockers: 0, Suggestions: 2, Nitpicks: 1`), so the author can see the shape of the review at a glance.
+Include every category in the count line even when zero (`Blockers: 0, Suggestions: 2,
+Nitpicks: 1`), so the author can see the shape of the review at a glance.
 
 The body is the last resort, not a summary. A finding appears there only because there is
 no line and no file to attach it to. Never restate, preview, or summarize a finding that
@@ -300,8 +308,9 @@ finding. See `references/gh-commands.md` for the full JSON shape, including the
 
 ### Rules for this shape
 
-- Every placed finding opens with a bold heading, `**[Blocker] ...**`, `**[Suggestion] ...**`, or `**[Nitpick] ...**`, stating the issue in one line, then carries all five
-bullets: **What**, **Why**, **Impact**, **Repro**, **Fix**.
+- Every placed finding opens with a bold heading, `**[Blocker] ...**`,
+  `**[Suggestion] ...**`, or `**[Nitpick] ...**`, stating the issue in one line, then
+  carries all five bullets: **What**, **Why**, **Impact**, **Repro**, **Fix**.
 - Write for someone unfamiliar with the codebase. Plain language, no unexplained jargon.
 - Every finding proposes a concrete fix. "This feels wrong" is not a review comment.
 - Keep severity honest in both directions: do not soften a blocker into a nitpick, and do
