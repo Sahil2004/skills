@@ -123,7 +123,7 @@ Rules for this outcome:
 - `PENDING` is not failing. Never gate on a check that is merely still running.
 - When the author pushes a fix and asks again, start over at step 1; the diff has moved.
 
-  Tell the human in chat that the review stopped at CI and no code review was performed.
+Tell the human in chat that the review stopped at CI and no code review was performed.
 
 ## Outcome A: the PR is correct
 
@@ -143,7 +143,7 @@ That is the entire GitHub-side action. Specifically:
 - Never manufacture a concern to look thorough, and never suppress a real one to reach a
   clean approval.
 
-  Then tell the human, in chat, that the PR is correct and what you verified:
+Then tell the human, in chat, that the PR is correct and what you verified:
 
 ```
 Approved PR #<n> — <title>.
@@ -160,7 +160,7 @@ The PR is correct according to everything I verified, and I checked all the case
 <Optional, chat only: anything worth knowing that was not worth a review comment.>
 ```
 
-  Rules for this shape:
+Rules for this shape:
 
 - The chat report lists every checklist category from `references/review-checklist.md`
   that you examined, so "I verified all cases" is backed by specifics, not asserted bare.
@@ -203,7 +203,6 @@ is already posted inline or on a file, and do not add a lead-in describing the m
 When every finding has a home, the body is exactly one line: the counts.
 
 ### Comment placement
-
 
 | Scope of the finding              | Where it goes         | How                                 |
 | --------------------------------- | --------------------- | ----------------------------------- |
