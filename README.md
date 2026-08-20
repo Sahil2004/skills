@@ -13,6 +13,9 @@ templates/SKILL.md                # starting point for a new skill
 scripts/validate.py               # schema + lint checks
 scripts/install.py                # symlink/copy skills into agent homes
 scripts/new_skill.py              # scaffold a new skill
+scripts/check_cli_parity.py       # keep bin/cli.js in step with the installer
+bin/cli.js                        # dependency-free npm/npx installer
+package.json                      # npm packaging
 ```
 
 ## Agent instructions
@@ -41,6 +44,29 @@ allowed-tools: [Bash, Read, Write]   # optional hint
 
 `description` is the routing signal: write it as trigger conditions, not a summary.
 
+## Install
+
+No clone required. With Node 16+:
+
+```bash
+npx agent-skills-kit --all                       # every skill, every agent it declares
+npx agent-skills-kit --skill review-pr           # one skill
+npx agent-skills-kit --agent claude --all        # one agent
+npx agent-skills-kit --list                      # show skills and target directories
+npx agent-skills-kit --all --dry-run             # preview without writing
+npx agent-skills-kit --all --uninstall           # remove
+```
+
+Straight from GitHub, without the registry:
+
+```bash
+npx github:Sahil2004/skills --all
+```
+
+The npm CLI copies files, so an install survives npm clearing its cache. Working in a
+clone instead? Use the Python installer below; it symlinks by default, so edits take
+effect immediately.
+
 ## Usage
 
 ```bash
@@ -51,6 +77,7 @@ python3 scripts/install.py --all           # install everything, everywhere
 python3 scripts/install.py --agent claude --skill my-skill
 python3 scripts/install.py --all --copy    # copy instead of symlink
 python3 scripts/install.py --all --uninstall
+python3 scripts/check_cli_parity.py        # bin/cli.js matches the Python installer
 ```
 
 Symlinks are the default so edits in this repo take effect immediately.
@@ -59,6 +86,7 @@ Symlinks are the default so edits in this repo take effect immediately.
 
 | Agent | Path |
 | --- | --- |
+| jcode | `~/.jcode/skills/<name>` |
 | claude | `~/.claude/skills/<name>` |
 | codex | `~/.codex/skills/<name>` |
 | windsurf | `~/.codeium/windsurf/skills/<name>` |
@@ -77,4 +105,5 @@ generated pointer file listing installed skills, so they can discover and open t
 
 ## CI
 
-`.github/workflows/validate.yml` runs `scripts/validate.py` on every push and PR.
+`.github/workflows/validate.yml` runs on every push and PR: skill validation, the
+installer listing, the CLI parity check, a dry-run install, and `npm pack`.
