@@ -157,20 +157,23 @@ finding at the narrowest scope that fits it.
 
 ### The main comment
 
-The review body leads with the counts, in this exact form:
+The body is the counts, and nothing else unless a finding fits nowhere else:
 
 ```
 Blockers: 2, Suggestions: 3, Nitpicks: 1
 
-<one line on the main risk.>
-
-<Any general findings that belong to no file or line: PR scope, missing tests overall,
-architectural concerns, missing description. One bullet each.>
+<Only findings that fit no line and no file: PR scope, missing tests overall,
+architectural concerns, missing description. One bullet each. Omit this whole
+block when every finding is placed inline or on a file.>
 ```
 
 Include every category in the count line even when zero (`Blockers: 0, Suggestions: 2,
-Nitpicks: 1`), so the author can see the shape of the review at a glance. Do not restate
-the per-line findings here; they live on the lines themselves.
+Nitpicks: 1`), so the author can see the shape of the review at a glance.
+
+The body is the last resort, not a summary. A finding appears there only because there is
+no line and no file to attach it to. Never restate, preview, or summarize a finding that
+is already posted inline or on a file, and do not add a lead-in describing the main risk.
+When every finding has a home, the body is exactly one line: the counts.
 
 ### Comment placement
 
@@ -229,8 +232,8 @@ finding. See `references/gh-commands.md` for the full JSON shape, including the
 - Keep severity honest in both directions: do not soften a blocker into a nitpick, and do
   not inflate a nitpick to pad the counts.
 - The counts in the body must equal the findings actually posted.
-- When the only findings are open questions, request changes but say **"needs info"** in
-  the risk line rather than implying the code is wrong.
+- When the only findings are open questions, request changes but phrase them as questions
+  on the relevant lines rather than implying the code is wrong.
 
 ## Rules
 

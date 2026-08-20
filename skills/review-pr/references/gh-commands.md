@@ -71,7 +71,7 @@ Build the whole review as JSON and submit it once. Never post comments one at a 
 ```json
 {
   "event": "REQUEST_CHANGES",
-  "body": "Blockers: 1, Suggestions: 1, Nitpicks: 0\n\nMain risk: the logged-out path dereferences a nil user.\n\n- The PR description does not explain the behavior change.",
+  "body": "Blockers: 1, Suggestions: 1, Nitpicks: 0\n\n- The PR description does not explain the behavior change.",
   "comments": [
     {
       "path": "pkg/auth/check.go",
