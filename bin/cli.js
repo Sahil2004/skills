@@ -203,7 +203,7 @@ function parseArgs(argv) {
   return out;
 }
 
-const USAGE = `agent-skills — install portable agent skills
+const USAGE = `sahil2004-skills — install portable agent skills
 
 Usage:
   npx @sahil2004/skills --all               install every skill for every agent it declares
