@@ -98,8 +98,14 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
 
 ## Outcomes
 
-Exactly one applies. Read the matching section of `references/outcomes.md` before acting;
-each has rules that are easy to get wrong.
+Exactly one applies. Read its file before acting; each has rules that are easy to get
+wrong. Do not read the other two.
+
+| Condition | Outcome | Read |
+| --- | --- | --- |
+| Any CI check failing | **C** | `references/outcome-ci-failing.md` |
+| CI green, nothing to change | **A** | `references/outcome-approve.md` |
+| CI green, any finding at all | **B** | `references/outcome-request-changes.md` |
 
 ### C: CI is failing — overrides everything
 
@@ -123,25 +129,16 @@ gh pr review <n> --approve
 ### B: any finding at all
 
 Request changes. The body is the counts, plus a bullet only for a finding that fits no
-line and no file. Everything else is placed inline or on a file.
-
-```
-Blockers: 2, Suggestions: 3, Nitpicks: 1
-```
-
-Submit the body and every comment in one call:
+line and no file. Everything else is placed inline or on a file. Submit the body and
+every comment in one call.
 
 ```bash
 gh api repos/<owner/repo>/pulls/<n>/reviews --input /tmp/review-<n>.json
 ```
 
-See `references/writing-comments.md` for comment shape and `references/gh-commands.md`
-for the payload.
-
 ## Rules
 
-These hold for every review; the outcome-specific rules live in
-`references/outcomes.md`.
+These hold for every review; the outcome-specific rules live in that outcome's file.
 
 - One API call per job. Use `pr_context.sh`; never loop a command per file, and never
   re-fetch data it already returned.
@@ -163,16 +160,20 @@ These hold for every review; the outcome-specific rules live in
 
 ## References
 
-Load these on demand, not up front:
+Load these on demand, not up front.
 
 - `references/review-checklist.md` — the per-category checklist. Read at step 6, when
   actually reviewing the diff.
-- `references/outcomes.md` — the full rules for the outcome the verdict selected. Read
-  the matching section before approving or requesting changes.
 - `references/writing-comments.md` — placement tiers, the five-bullet comment structure,
   and committable suggestions. Read under Outcome B, before posting findings.
 - `references/gh-commands.md` — the review JSON payload, batched `gh`/GraphQL recipes,
   and the costly anti-patterns. Read when posting, or when a command needs changing.
+
+One outcome file, chosen by the verdict. Never more than one:
+
+- `references/outcome-ci-failing.md` — Outcome C, any check failing.
+- `references/outcome-approve.md` — Outcome A, nothing to change.
+- `references/outcome-request-changes.md` — Outcome B, any finding at all.
 
 ## Scripts
 
