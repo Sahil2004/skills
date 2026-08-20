@@ -138,39 +138,27 @@ gh api repos/<owner/repo>/pulls/<n>/reviews --input /tmp/review-<n>.json
 See `references/writing-comments.md` for comment shape and `references/gh-commands.md`
 for the payload.
 
-## Rules for this shape
-
-- Every placed finding opens with a bold heading, `**[Blocker] ...**`,
-  `**[Suggestion] ...**`, or `**[Nitpick] ...**`, stating the issue in one line, then
-  carries all five bullets: **What**, **Why**, **Impact**, **Repro**, **Fix**.
-- Write for someone unfamiliar with the codebase. Plain language, no unexplained jargon.
-- Every finding proposes a concrete fix. "This feels wrong" is not a review comment.
-- Keep severity honest in both directions: do not soften a blocker into a nitpick, and do
-  not inflate a nitpick to pad the counts.
-- The counts in the body must equal the findings actually posted.
-- When the only findings are open questions, request changes but phrase them as questions
-  on the relevant lines rather than implying the code is wrong.
-
 ## Rules
+
+These hold for every review; the outcome-specific rules live in
+`references/outcomes.md`.
 
 - One API call per job. Use `pr_context.sh`; never loop a command per file, and never
   re-fetch data it already returned.
-- Failing CI ends the review before it starts. Request changes on the checks alone, with
-  no counts line and no code comments, and never review the diff underneath a red build.
+- Failing CI ends the review before it starts, with no counts line and no code comments.
 - Approve only when there is nothing to change, and approve with no comments attached.
-  Any finding, down to one nitpick, is a request for changes. Never merge or close a PR.
+  Any finding, down to one nitpick, is a request for changes.
+- Never merge or close a PR.
 - Never approve to be agreeable. If any category is unverified or any doubt remains, that
   is Outcome B, not an approval.
-- Put every finding at the narrowest true scope: line, then file, then the review body.
-- Quote the specific line and give a concrete fix; no vague feedback.
-- Offer a committable `suggestion` block whenever the fix is small and unambiguous.
-- Be direct about severity. Do not soften a blocker into a nitpick, and do not inflate a
-  nitpick into a blocker to justify a longer review.
-- The counts in the review body must match the findings actually posted.
 - A clean PR gets a clean review. Finding nothing is a valid, complete result; never
   invent findings to fill the template.
-- Do not rewrite the PR author's style preferences as blockers.
-- Judge the diff against the repo's existing conventions, not your own defaults.
+- Be direct about severity in both directions: do not soften a blocker into a nitpick, and
+  do not inflate a nitpick to justify a longer review.
+- Every finding names a concrete fix. "This feels wrong" is not a review comment.
+- The counts in the review body must equal the findings actually posted.
+- Judge the diff against the repo's existing conventions, not your own defaults, and do
+  not rewrite the author's style preferences as blockers.
 - No vendor or AI attribution in review bodies.
 
 ## References

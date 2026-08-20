@@ -97,3 +97,14 @@ Rules for suggestion blocks:
 - Use one only when the fix is small and unambiguous. A refactor spanning several
   functions is described in prose, not forced into a suggestion.
 - Never put a placeholder or `...` inside a suggestion block. It would be committed as-is.
+
+## Rules for every placed comment
+
+- The heading names the severity in braces and states the issue in one line; the five
+  bullets follow in order: **What**, **Why**, **Impact**, **Repro**, **Fix**.
+- Write for someone unfamiliar with the codebase. Plain language, no unexplained jargon.
+- Every finding proposes a concrete fix. "This feels wrong" is not a review comment.
+- Keep severity honest in both directions: do not soften a blocker into a nitpick, and do
+  not inflate a nitpick to pad the counts.
+- When the only findings are open questions, request changes but phrase them as questions
+  on the relevant lines rather than implying the code is wrong.
