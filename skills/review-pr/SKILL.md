@@ -18,8 +18,9 @@ Review a GitHub pull request and post structured, severity-classified feedback.
 - "Look over these changes and tell me what's wrong."
 
 Do not use this when the user wants to **answer** review comments already left on their own
-PR. That is the `address-review` skill. Also skip this when the change is not on GitHub yet
-(review the working tree directly) or the user only wants a PR description.
+PR; this skill produces feedback, it does not reply to it. Also skip this when the change
+is not on GitHub yet (review the working tree directly) or the user only wants a PR
+description.
 
 ## Prerequisites
 
@@ -133,5 +134,3 @@ comment. Omit empty sections.
 | Script | Calls | Purpose |
 | --- | --- | --- |
 | `scripts/pr_context.sh` | 1 | Whole review context: meta, files, failing checks, reviews, threads |
-
-To answer and resolve the comments a reviewer left, use the `address-review` skill.

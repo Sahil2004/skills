@@ -48,8 +48,8 @@ gh api repos/<owner/repo>/pulls/<n>/comments --paginate \
 gh pr view <n> --json commits --jq '.commits[].messageHeadline'
 ```
 
-Resolution state exists only in GraphQL; `pr_context.sh` already reports unresolved
-threads. To reply to or resolve threads, use the `address-review` skill.
+Resolution state exists only in GraphQL; `pr_context.sh` already reports which threads are
+unresolved, so read them from its output rather than making a second request.
 
 ## Posting a review
 
