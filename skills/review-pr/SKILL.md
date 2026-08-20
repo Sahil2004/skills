@@ -251,14 +251,14 @@ Write all five for a reader who does not know this codebase:
 - **Fix** — the specific change to make. Name the function, value, or line to change.
   Pair it with a `suggestion` block whenever the fix is small enough to commit directly.
 
-  Keep each bullet to a sentence or two. If a bullet would be empty or a restatement of
-  another, the finding is probably not real; drop it rather than padding the shape.
+Keep each bullet to a sentence or two. If a bullet would be empty or a restatement of
+another, the finding is probably not real; drop it rather than padding the shape.
 
-  Some findings cannot be run, notably style and readability nitpicks. Never invent a
-  repro for them. Say where it is visible instead, such as **Repro:** Read the block as a
-  newcomer, or **Repro:** Not runnable, visible on inspection only. A blocker that you
-  cannot describe how to reach deserves a second look; if nothing triggers it, it may not
-  be a blocker.
+Some findings cannot be run, notably style and readability nitpicks. Never invent a
+repro for them. Say where it is visible instead, such as **Repro:** Read the block as a
+newcomer, or **Repro:** Not runnable, visible on inspection only. A blocker that you
+cannot describe how to reach deserves a second look; if nothing triggers it, it may not
+be a blocker.
 
 ### Committable suggestions
 
@@ -289,10 +289,10 @@ commit in one click.
 Rules for suggestion blocks:
 
 - The block replaces **exactly** the commented line range, so the range must cover every
-line you are rewriting and the replacement must be complete, compiling code.
+  line you are rewriting and the replacement must be complete, compiling code.
 - Match the surrounding indentation exactly; the block is inserted verbatim.
 - Use one only when the fix is small and unambiguous. A refactor spanning several
-functions is described in prose, not forced into a suggestion.
+  functions is described in prose, not forced into a suggestion.
 - Never put a placeholder or `...` inside a suggestion block. It would be committed as-is.
 
 ### Posting it
@@ -350,9 +350,6 @@ finding. See `references/gh-commands.md` for the full JSON shape, including the
 
 ## Scripts
 
-
 | Script                  | Calls | Purpose                                                             |
 | ----------------------- | ----- | ------------------------------------------------------------------- |
 | `scripts/pr_context.sh` | 1     | Whole review context: meta, files, failing checks, reviews, threads |
-
-
