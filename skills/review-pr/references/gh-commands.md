@@ -77,12 +77,12 @@ Build the whole review as JSON and submit it once. Never post comments one at a 
       "path": "pkg/auth/check.go",
       "line": 20,
       "side": "RIGHT",
-      "body": "blocker: `user` may be nil on the logged-out path.\n\n- **What:** When nobody is signed in, `user` is empty, and the next line asks that empty value for its name.\n- **Why:** Asking an empty value for a field crashes the request instead of returning a handled error.\n- **Impact:** Every logged-out visitor to this endpoint gets a 500 instead of a sign-in prompt.\n- **Repro:** Call `GET /api/profile` with no session cookie.\n- **Fix:** Return `ErrUnauthenticated` before touching `user`.\n\n```suggestion\n\tif user == nil {\n\t\treturn ErrUnauthenticated\n\t}\n```"
+      "body": "**[Blocker] `user` may be nil on the logged-out path.**\n\n- **What:** When nobody is signed in, `user` is empty, and the next line asks that empty value for its name.\n- **Why:** Asking an empty value for a field crashes the request instead of returning a handled error.\n- **Impact:** Every logged-out visitor to this endpoint gets a 500 instead of a sign-in prompt.\n- **Repro:** Call `GET /api/profile` with no session cookie.\n- **Fix:** Return `ErrUnauthenticated` before touching `user`.\n\n```suggestion\n\tif user == nil {\n\t\treturn ErrUnauthenticated\n\t}\n```"
     },
     {
       "path": "pkg/auth/check.go",
       "subject_type": "file",
-      "body": "suggestion: no test covers the new branch in this file.\n\n- **What:** The new logged-out branch in this file is never exercised by a test.\n- **Why:** Untested branches regress silently, and this one guards an auth path.\n- **Impact:** A later refactor can reintroduce the crash with a green build.\n- **Repro:** Run `go test ./pkg/auth -run TestCheck -cover` and see the branch uncovered.\n- **Fix:** Add a case to `TestCheck` covering a nil user."
+      "body": "**[Suggestion] No test covers the new branch in this file.**\n\n- **What:** The new logged-out branch in this file is never exercised by a test.\n- **Why:** Untested branches regress silently, and this one guards an auth path.\n- **Impact:** A later refactor can reintroduce the crash with a green build.\n- **Repro:** Run `go test ./pkg/auth -run TestCheck -cover` and see the branch uncovered.\n- **Fix:** Add a case to `TestCheck` covering a nil user."
     }
   ]
 }
@@ -116,7 +116,7 @@ A fenced ` ```suggestion ` block renders with an "Apply suggestion" button. The 
 replaces exactly the commented line range:
 
 ````
-blocker: this dereferences a possibly-nil value.
+**[Blocker] This dereferences a possibly-nil value.**
 
 ```suggestion
     if user == nil {

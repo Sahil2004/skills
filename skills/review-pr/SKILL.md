@@ -73,12 +73,12 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
    categories that genuinely do not apply.
 
 6. **Classify every finding** with a severity prefix so the author can triage:
-   - `blocker:` correctness, security, data loss, breaking change. Must be fixed.
-   - `suggestion:` should be fixed before merge, but not dangerous.
-   - `nitpick:` style or taste. Non-blocking, the author may decline.
+   - `[Blocker]` correctness, security, data loss, breaking change. Must be fixed.
+   - `[Suggestion]` should be fixed before merge, but not dangerous.
+   - `[Nitpick]` style or taste. Non-blocking, the author may decline.
 
    An open question counts as a blocker or a suggestion depending on what it gates: use
-   `blocker:` when you cannot judge correctness without the answer.
+   `[Blocker]` when you cannot judge correctness without the answer.
 
 7. **Read what other reviewers already said** (in the step 1 output) and do not repeat an
    existing open comment. Add signal, not volume.
@@ -188,11 +188,12 @@ the summary, and do not attach a general concern to an arbitrary line just to an
 
 ### Comment structure
 
-Every comment placed on a line or a file uses the same five bold bullets, in this order,
-after the severity word:
+Every comment placed on a line or a file opens with a bold heading naming the severity
+in square braces, followed by a one-line statement of the issue, then the same five bold
+bullets in this order:
 
 ```
-blocker: `user` may be nil on the logged-out path.
+**[Blocker] `user` may be nil on the logged-out path.**
 
 - **What:** When nobody is signed in, `user` is empty here, and the next line asks that
   empty value for its name.
@@ -204,6 +205,10 @@ blocker: `user` may be nil on the logged-out path.
   after adding a case with a nil user.
 - **Fix:** Return `ErrUnauthenticated` before touching `user`.
 ```
+
+The heading is the whole finding in one line, so a reader skimming the Files tab knows
+the severity and the problem without expanding anything. Braced label exactly as
+`[Blocker]`, `[Suggestion]`, or `[Nitpick]`, and the entire heading line is bold.
 
 Write all five for a reader who does not know this codebase:
 
@@ -234,7 +239,7 @@ When a fix is small and you can express it as the literal replacement text, use 
 commit in one click.
 
 ````
-blocker: `user` may be nil on the logged-out path.
+**[Blocker] `user` may be nil on the logged-out path.**
 
 - **What:** When nobody is signed in, `user` is empty, and the next line asks that empty
   value for its name.
@@ -276,9 +281,9 @@ finding. See `references/gh-commands.md` for the full JSON shape, including the
 
 ### Rules for this shape
 
-- Every inline finding starts with its severity word: `blocker:`, `suggestion:`, or
-  `nitpick:`, then carries all five bullets: **What**, **Why**, **Impact**, **Repro**,
-  **Fix**.
+- Every placed finding opens with a bold heading, `**[Blocker] ...**`, `**[Suggestion]
+  ...**`, or `**[Nitpick] ...**`, stating the issue in one line, then carries all five
+  bullets: **What**, **Why**, **Impact**, **Repro**, **Fix**.
 - Write for someone unfamiliar with the codebase. Plain language, no unexplained jargon.
 - Every finding proposes a concrete fix. "This feels wrong" is not a review comment.
 - Keep severity honest in both directions: do not soften a blocker into a nitpick, and do
