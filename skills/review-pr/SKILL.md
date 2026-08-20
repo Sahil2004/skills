@@ -14,7 +14,7 @@ Review a GitHub pull request and post structured, severity-classified feedback.
 ## When to use
 
 - "Review PR 412" / a pasted `https://github.com/<org>/<repo>/pull/<n>` URL.
-- "Is this PR safe to merge?"
+- "Is this PR safe to merge?" (answering "yes, nothing blocking" is a valid outcome)
 - "Look over these changes and tell me what's wrong."
 
 Do not use this when the user wants to **answer** review comments already left on their own
@@ -78,7 +78,17 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
 7. **Read what other reviewers already said** (in the step 1 output) and do not repeat an
    existing open comment. Add signal, not volume.
 
-8. **Post the review as one batched call.** Inline comments and the summary body go up
+8. **Decide the verdict**, which determines the output shape:
+
+   | Findings after step 5-6 | Verdict | Output |
+   | --- | --- | --- |
+   | No blockers and no issues | **Clean** | Outcome A |
+   | Any blocker, issue, or open question | **Needs work** | Outcome B |
+
+   Nits alone do not make a PR "needs work". Report them under a clean verdict and say
+   they are optional.
+
+9. **Post the review as one batched call.** Inline comments and the summary body go up
    together:
 
    ```bash
@@ -88,29 +98,70 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
    For line-anchored comments, submit them in a single `/reviews` request; see
    `references/gh-commands.md`.
 
-9. **Never approve on the user's behalf unless they said to.** Default to `--comment`.
+10. **Never approve on the user's behalf unless they said to.** Default to `--comment`,
+    even when the verdict is clean.
 
-## Review output shape
+## Outcome A: the PR is good
+
+Use when there are no blockers and no issues. Be short. A clean review that pads itself
+with invented concerns wastes the author's time and trains them to ignore you.
 
 ```
 ## Summary
-<what the PR does, 1-2 lines> — <recommendation: approve / changes / needs info>
+<what the PR does, 1-2 lines>
+
+**Verdict: looks good.** <one line on why: the change is scoped, tested, and CI is green.>
+
+## What I checked
+- <area>: <what you verified, e.g. "null paths in auth.ts:40-58 are guarded">
+- <area>: <...>
+
+## Optional nits
+- `path/file.ts:88` — <suggestion>. Non-blocking.
+```
+
+Rules for this shape:
+
+- State plainly that you found nothing blocking. Do not manufacture a concern to look
+  thorough.
+- `## What I checked` is required: it shows the review was real and tells the author which
+  risks were actually examined.
+- Drop `## Optional nits` entirely when there are none.
+- Never say "LGTM" alone with no evidence of what was checked.
+
+## Outcome B: the PR needs changes
+
+Use when there is at least one blocker, issue, or open question. Lead with the most
+severe finding.
+
+```
+## Summary
+<what the PR does, 1-2 lines>
+
+**Verdict: needs changes.** <n> blocker(s), <n> issue(s). <one line on the main risk.>
 
 ## Blockers
 - `path/file.ts:120` — <problem> → <concrete fix>
 
 ## Issues
-- ...
-
-## Nits
-- ...
+- `path/file.ts:44` — <problem> → <concrete fix>
 
 ## Questions
-- ...
+- `path/file.ts:12` — <what you need to know to judge this>
+
+## Optional nits
+- <non-blocking suggestion>
 ```
 
-Every finding names a file and line and proposes a fix. "This feels wrong" is not a review
-comment. Omit empty sections.
+Rules for this shape:
+
+- Omit any section that is empty. Never print a header with "none" under it.
+- Every finding names a file and line and proposes a concrete fix. "This feels wrong" is
+  not a review comment.
+- Keep the severity honest: if nothing is truly blocking, there are no blockers, and the
+  verdict line should say so.
+- When the only findings are questions, say **"Verdict: needs info."** rather than
+  implying the code is wrong.
 
 ## Rules
 
@@ -118,7 +169,10 @@ comment. Omit empty sections.
   re-fetch data it already returned.
 - Never approve, merge, or close a PR unless the user asked for that exact action.
 - Quote the specific line and give a concrete fix; no vague feedback.
-- Be direct about severity. Do not soften a blocker into a nit.
+- Be direct about severity. Do not soften a blocker into a nit, and do not inflate a nit
+  into a blocker to justify a longer review.
+- A clean PR gets a clean review. Finding nothing is a valid, complete result; never
+  invent findings to fill the template.
 - Do not rewrite the PR author's style preferences as blockers.
 - Judge the diff against the repo's existing conventions, not your own defaults.
 - No vendor or AI attribution in review bodies.
