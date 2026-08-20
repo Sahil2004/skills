@@ -54,12 +54,16 @@ unresolved, so read them from its output rather than making a second request.
 ## Posting a review
 
 ```bash
+gh pr review <n> --approve                              # clean verdict: no body, no comments
 gh pr review <n> --comment         --body-file /tmp/review.md
 gh pr review <n> --request-changes --body-file /tmp/review.md
-gh pr review <n> --approve         --body "LGTM"
 ```
 
-Default to `--comment`. Never `--approve` unless the user asked.
+A clean verdict is a bare `--approve` with no `--body` and no inline comments. Anything
+with findings uses `--comment`. Use `--request-changes` only when the user asks for it.
+
+Approving is irreversible in the sense that it signals sign-off to the author and can
+unblock a merge, so never approve a PR with an unverified category.
 
 ### Inline comments: batch them into one review
 

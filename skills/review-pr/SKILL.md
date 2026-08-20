@@ -1,7 +1,7 @@
 ---
 name: review-pr
-description: When the user wants to review someone's GitHub pull request and leave feedback. Also use when the user mentions "review this PR", "code review", "look at this pull request", "what do you think of this PR", "request changes", or pastes a GitHub pull request URL asking for an opinion.
-version: 0.2.0
+description: When the user wants to review someone's GitHub pull request, approve it, or leave feedback on it. Also use when the user mentions "review this PR", "code review", "look at this pull request", "what do you think of this PR", "approve this PR", "request changes", or pastes a GitHub pull request URL asking for an opinion.
+version: 0.3.0
 agents: [all]
 tags: [github, code-review, workflow]
 allowed-tools: [Bash, Read, Write, Edit]
@@ -9,13 +9,16 @@ allowed-tools: [Bash, Read, Write, Edit]
 
 # Review PR
 
-Review a GitHub pull request and post structured, severity-classified feedback.
+Review a GitHub pull request, then either approve it cleanly or post structured,
+severity-classified feedback. A correct PR is approved with no comments attached; a PR
+with findings gets those findings and no approval.
 
 ## When to use
 
 - "Review PR 412" / a pasted `https://github.com/<org>/<repo>/pull/<n>` URL.
 - "Is this PR safe to merge?" (answering "yes, nothing blocking" is a valid outcome)
 - "Look over these changes and tell me what's wrong."
+- "Approve this PR if it's fine."
 
 Do not use this when the user wants to **answer** review comments already left on their own
 PR; this skill produces feedback, it does not reply to it. Also skip this when the change
@@ -78,18 +81,18 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
 7. **Read what other reviewers already said** (in the step 1 output) and do not repeat an
    existing open comment. Add signal, not volume.
 
-8. **Decide the verdict**, which determines the output shape:
+8. **Decide the verdict**, which determines what happens next:
 
-   | Findings after step 5-6 | Verdict | Output |
+   | Findings after step 5-6 | Verdict | Action |
    | --- | --- | --- |
-   | No blockers and no issues | **Clean** | Outcome A |
-   | Any blocker, issue, or open question | **Needs work** | Outcome B |
+   | No blockers and no issues | **Clean** | Outcome A: approve, post no comments |
+   | Any blocker, issue, or open question | **Needs work** | Outcome B: post findings |
 
-   Nits alone do not make a PR "needs work". Report them under a clean verdict and say
-   they are optional.
+   Nits alone do not make a PR "needs work". Under a clean verdict, nits are not posted to
+   the PR at all; report them to the human instead (see Outcome A).
 
-9. **Post the review as one batched call.** Inline comments and the summary body go up
-   together:
+9. **Act on the verdict.** Clean goes to Outcome A, everything else to Outcome B. Post
+   findings as one batched call:
 
    ```bash
    gh pr review <n> --comment --body-file /tmp/review-<n>.md
@@ -98,36 +101,52 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
    For line-anchored comments, submit them in a single `/reviews` request; see
    `references/gh-commands.md`.
 
-10. **Never approve on the user's behalf unless they said to.** Default to `--comment`,
-    even when the verdict is clean.
+10. **Never merge or close a PR.** Approving is allowed only under a clean verdict
+    (Outcome A); requesting changes needs the user to ask for it explicitly.
 
-## Outcome A: the PR is good
+## Outcome A: the PR is correct
 
-Use when there are no blockers and no issues. Be short. A clean review that pads itself
-with invented concerns wastes the author's time and trains them to ignore you.
+Use when there are no blockers and no issues. Approve the PR and leave **no review
+comments on it at all**.
+
+```bash
+gh pr review <n> --approve
+```
+
+That is the entire GitHub-side action. Specifically:
+
+- Post no summary body, no inline comments, and no nits to the PR. A correct PR gets a
+  clean approval and nothing else.
+- Do not open threads to note optional suggestions. If you noticed nits, they go in the
+  report to the human below, not onto the PR.
+- Never manufacture a concern to look thorough.
+
+Then tell the human, in chat, that the PR is correct and what you verified:
 
 ```
-## Summary
-<what the PR does, 1-2 lines>
+Approved PR #<n> — <title>.
 
-**Verdict: looks good.** <one line on why: the change is scoped, tested, and CI is green.>
+The PR is correct according to everything I verified, and I checked all the cases:
+- Correctness: <what you confirmed>
+- Security: <what you confirmed>
+- Error handling: <what you confirmed>
+- Tests: <what you confirmed>
+- API/compatibility: <what you confirmed>
+- Performance: <what you confirmed>
+- CI: <status>
 
-## What I checked
-- <area>: <what you verified, e.g. "null paths in auth.ts:40-58 are guarded">
-- <area>: <...>
-
-## Optional nits
-- `path/file.ts:88` — <suggestion>. Non-blocking.
+<Optional, chat only: any non-blocking nits I did not post to the PR.>
 ```
 
 Rules for this shape:
 
-- State plainly that you found nothing blocking. Do not manufacture a concern to look
-  thorough.
-- `## What I checked` is required: it shows the review was real and tells the author which
-  risks were actually examined.
-- Drop `## Optional nits` entirely when there are none.
-- Never say "LGTM" alone with no evidence of what was checked.
+- The chat report lists every checklist category from `references/review-checklist.md`
+  that you examined, so "I verified all cases" is backed by specifics, not asserted bare.
+- Only claim a category if you actually checked it. If something was genuinely not
+  applicable, say "n/a" and why rather than dropping it silently.
+- If you could not verify a category you would normally check (no local checkout, CI not
+  run, generated code you cannot read), the verdict is not clean. Say what is unverified
+  and use Outcome B with a question instead of approving.
 
 ## Outcome B: the PR needs changes
 
@@ -167,7 +186,10 @@ Rules for this shape:
 
 - One API call per job. Use `pr_context.sh`; never loop a command per file, and never
   re-fetch data it already returned.
-- Never approve, merge, or close a PR unless the user asked for that exact action.
+- Approve only under a clean verdict, and approve with no comments attached. Never merge
+  or close a PR, and never request changes unless the user asked for that action.
+- Never approve to be agreeable. If any category is unverified or any doubt remains, that
+  is Outcome B, not an approval.
 - Quote the specific line and give a concrete fix; no vague feedback.
 - Be direct about severity. Do not soften a blocker into a nit, and do not inflate a nit
   into a blocker to justify a longer review.
