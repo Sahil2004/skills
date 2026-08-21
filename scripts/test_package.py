@@ -235,6 +235,49 @@ def _tree_diff(a: Path, b: Path) -> list[str]:
     return out
 
 
+def check_single_install_keeps_index(home: Path, r: Results) -> None:
+    """Installing one skill must not drop the others from the pointer index.
+
+    npm makes single-skill installs the advertised path, so this runs
+    routinely: `--skill review-pr` after `--all` must leave every other
+    already-installed skill listed, or it stays on disk while going
+    invisible to the agents that read the index rather than the directory.
+    """
+    before = {}
+    for agent, pointer in POINTER_FILES.items():
+        path = Path(str(pointer).replace("~", str(home), 1))
+        if path.is_file():
+            before[agent] = _index_entries(path)
+    if not before:
+        return
+
+    one = discover()[0].name
+    result = call_cli(home, ["--skill", one, "--force"])
+    r.check(result.returncode == 0, f"--skill {one} after --all succeeds", result.stderr)
+
+    for agent, names in before.items():
+        path = Path(str(pointer_for(home, agent)))
+        after = _index_entries(path)
+        lost = sorted(set(names) - set(after))
+        r.check(not lost, f"{agent}: index keeps every skill after a single install",
+                f"dropped: {', '.join(lost)}")
+
+
+def pointer_for(home: Path, agent: str) -> Path:
+    return Path(str(POINTER_FILES[agent]).replace("~", str(home), 1))
+
+
+def _index_entries(path: Path) -> list[str]:
+    """Skill names listed inside the managed block."""
+    if not path.is_file():
+        return []
+    text = path.read_text(encoding="utf-8")
+    if MANAGED_BEGIN not in text:
+        return []
+    block = text.split(MANAGED_BEGIN, 1)[1].split("END managed skills index", 1)[0]
+    return re.findall(r"^- \*\*(.+?)\*\*", block, re.M)
+
+
 def check_idempotent(home: Path, r: Results) -> None:
     """Re-running must not duplicate anything, since users re-run to upgrade."""
     before = _snapshot(home)
@@ -348,6 +391,8 @@ def main() -> int:
             check_scripts_executable(home, r)
             check_parity_with_python(home, r)
             check_idempotent(home, r)
+            # Before the checks that rewrite the pointer files by design.
+            check_single_install_keeps_index(home, r)
             check_preserves_user_content(home, r)
             check_selectors(home, r)
 
