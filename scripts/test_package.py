@@ -102,6 +102,16 @@ def check_contents(tarball: Path, r: Results) -> None:
     r.check(not missing, "tarball contains every skill file", "\n".join(missing))
 
     r.check("bin/cli.js" in packed, "tarball contains the CLI")
+
+    # A declared license is only a claim; the text is what grants the rights.
+    # npm includes LICENSE regardless of files[], so this needs no allowlist entry.
+    pkg = json.loads((REPO_ROOT / "package.json").read_text(encoding="utf-8"))
+    if pkg.get("license"):
+        r.check(
+            any(p == "LICENSE" or p.startswith("LICENSE.") for p in packed),
+            f"tarball ships the {pkg['license']} license text",
+        )
+
     strays = [p for p in packed if p.startswith((".github/", "tests/")) or p.endswith(".pyc")]
     r.check(not strays, "tarball has no development cruft", "\n".join(strays))
 
@@ -113,10 +123,6 @@ def install_tarball(tarball: Path, home: Path, r: Results, label: str) -> bool:
     run(["npm", "init", "-y"], cwd=home, env=env)
     result = run(["npm", "install", str(tarball)], cwd=home, env=env)
     return r.check(result.returncode == 0, f"npm install works ({label})", result.stderr)
-
-
-def npx(home: Path, args: list[str]):
-    return run([BIN_NAME, *args], cwd=home, env=sandbox_env(home))
 
 
 def bin_path(home: Path) -> Path:
