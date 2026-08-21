@@ -53,6 +53,13 @@ bullets:
 Read `writing-comments.md` before writing them. It has the placement table,
 the full bullet briefs, and the rules for committable `suggestion` blocks.
 
+## Findings someone already raised
+
+Before building the payload, drop every finding that an unresolved thread already covers,
+and re-raise anything whose thread was resolved without the code changing.
+`existing-threads.md` has the matching table. Suppressed findings do not appear in the
+counts, and if nothing survives, post no review and report the open threads in chat.
+
 ## Posting it
 
 Submit the whole review, body and all inline comments, in one call:

@@ -41,6 +41,9 @@ Rules for this shape:
   that you examined, so "I verified all cases" is backed by specifics, not asserted bare.
 - Only claim a category if you actually checked it. If something was genuinely not
   applicable, say "n/a" and why rather than dropping it silently.
+- An unresolved blocker from another reviewer means the PR is not correct, even when you
+  found nothing yourself. Do not approve over someone else's open thread; report it in
+  chat instead. See `existing-threads.md`.
 - If you could not verify a category you would normally check (no local checkout, CI not
   run, generated code you cannot read), the verdict is not clean. Say what is unverified
   and use Outcome B with a question instead of approving.

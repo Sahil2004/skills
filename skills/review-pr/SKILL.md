@@ -58,19 +58,26 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
    run the checklist, do not classify findings. Go straight to Outcome C below. A red
    build makes a line-by-line review premature, since the fix will change the diff.
    `PENDING` contexts are not failures; review normally and note anything still running.
-3. **Understand intent before judging code.** Read the PR description and linked
+3. **Load the open threads before auditing.** Read `## Unresolved threads` from step 1 and
+   keep that list in mind for the whole review. An unresolved thread is feedback already
+   visible to the author, so re-posting it adds noise and splits the discussion. A thread
+   that someone **resolved** is fair game again: if the underlying problem is still in the
+   code, raise it, because resolving a thread does not fix anything. See
+   `references/existing-threads.md` for how to match a finding to a thread and what to do
+   with a suppressed one.
+4. **Understand intent before judging code.** Read the PR description and linked
    issues. State in one line what the PR claims to do. If the description does not
    explain the change, that is the first review comment.
-4. **Read the diff in context, not in isolation.** For every non-trivial hunk, open the
+5. **Read the diff in context, not in isolation.** For every non-trivial hunk, open the
    full file. Reviewing only diff lines produces false positives. When several files need
    full context, run `gh pr checkout <n>` once and read locally rather than making an API
    call per file.
-5. **Check tests.** CI is already green by step 2, so what remains is coverage: a
+6. **Check tests.** CI is already green by step 2, so what remains is coverage: a
    behavior change with no test change is a finding.
-6. **Apply the checklist.** Work through `references/review-checklist.md`: correctness,
+7. **Apply the checklist.** Work through `references/review-checklist.md`: correctness,
    security, error handling, tests, API/back-compat, performance, readability. Skip
    categories that genuinely do not apply.
-7. **Classify every finding** with a severity prefix so the author can triage:
+8. **Classify every finding** with a severity prefix so the author can triage:
 
    - `[Blocker]` correctness, security, data loss, breaking change. Must be fixed.
    - `[Suggestion]` should be fixed before merge, but not dangerous.
@@ -78,8 +85,6 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
 
    An open question counts as a blocker or a suggestion depending on what it gates: use
    `[Blocker]` when you cannot judge correctness without the answer.
-8. **Read what other reviewers already said** (in the step 1 output) and do not repeat an
-   existing open comment. Add signal, not volume.
 9. **Decide the verdict**, which determines what happens next:
 
    | State                               | Verdict        | Action                               |
@@ -126,7 +131,10 @@ These hold for every review; the outcome-specific rules live in that outcome's f
 - Be direct about severity in both directions: do not soften a blocker into a nitpick, and
   do not inflate a nitpick to justify a longer review.
 - Every finding names a concrete fix. "This feels wrong" is not a review comment.
-- The counts in the review body must equal the findings actually posted.
+- The counts in the review body must equal the findings actually posted, so a finding
+  suppressed as a duplicate of an open thread is not counted.
+- Never re-post a finding that an unresolved thread already covers. A thread that was
+  resolved without the code changing may be raised again.
 - Judge the diff against the repo's existing conventions, not your own defaults, and do
   not rewrite the author's style preferences as blockers.
 - No vendor or AI attribution in review bodies.
@@ -139,6 +147,8 @@ Load these on demand, not up front.
   actually reviewing the diff.
 - `references/writing-comments.md` — placement tiers, the five-bullet comment structure,
   and committable suggestions. Read under Outcome B, before posting findings.
+- `references/existing-threads.md` — how to suppress a finding another reviewer already
+  has open, and when a resolved thread may be re-raised. Read at step 3.
 - `references/gh-commands.md` — the review JSON payload, batched `gh`/GraphQL recipes,
   and the costly anti-patterns. Read when posting, or when a command needs changing.
 
