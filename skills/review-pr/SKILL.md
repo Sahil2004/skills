@@ -4,7 +4,7 @@ description: When the user wants to review someone's GitHub pull request, approv
 version: 0.1.0
 agents: [all]
 tags: [github, code-review, workflow]
-allowed-tools: [Bash, Read, Write, Edit]
+allowed-tools: Bash, Read, Write, Edit
 ---
 # Review PR
 
