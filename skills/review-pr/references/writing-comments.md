@@ -1,7 +1,7 @@
 # Writing review comments
 
-Loaded when posting findings under Outcome B. `SKILL.md` covers the verdict and the
-review body; this file covers the shape of each individual comment.
+Loaded when posting findings under Outcome B. `outcome-request-changes.md` covers the
+verdict and the review body; this file covers the shape of each individual comment.
 
 ## Placement
 

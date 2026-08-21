@@ -72,4 +72,3 @@ Build the payload with `event: REQUEST_CHANGES`, the count-led body, and one ent
 finding. See `gh-commands.md` for the full JSON shape, including the
 `subject_type: file` form and suggestion-block escaping.
 
-#
