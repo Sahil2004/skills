@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Resolve one or more PR review threads in a single API call.
 # Usage: resolve_thread.sh <threadId> [threadId...] [--undo]
-# Reads thread IDs from stdin when none are given (e.g. cut -f1 from fetch_threads.sh).
+# Reads thread IDs from stdin when none are given (e.g. cut -f2 from open_review.sh THREAD lines).
 set -euo pipefail
 
 MUTATION="resolveReviewThread"
