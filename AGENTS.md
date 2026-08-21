@@ -17,6 +17,7 @@ scripts/validate.py               # schema + lint checks
 scripts/install.py                # symlink/copy into agent homes
 scripts/new_skill.py              # scaffold a new skill
 scripts/check_cli_parity.py       # bin/cli.js vs the Python installer
+scripts/test_package.py           # end-to-end npm package test in a sandbox HOME
 bin/cli.js                        # dependency-free npm/npx installer
 package.json                      # npm packaging
 ```
@@ -30,6 +31,14 @@ python3 scripts/check_cli_parity.py
 ```
 
 All three must pass with zero errors. CI runs the same checks.
+
+Before publishing to npm, also run the end-to-end package test. It packs a real
+tarball and installs it into a sandboxed `HOME`, so a broken package is caught
+while the version number can still be changed:
+
+```bash
+python3 scripts/test_package.py
+```
 
 ## Adding or editing a skill
 

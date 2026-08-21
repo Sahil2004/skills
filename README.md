@@ -14,6 +14,7 @@ scripts/validate.py               # schema + lint checks
 scripts/install.py                # symlink/copy skills into agent homes
 scripts/new_skill.py              # scaffold a new skill
 scripts/check_cli_parity.py       # keep bin/cli.js in step with the installer
+scripts/test_package.py           # end-to-end npm package test in a sandbox HOME
 bin/cli.js                        # dependency-free npm/npx installer
 package.json                      # npm packaging
 ```
@@ -78,6 +79,7 @@ python3 scripts/install.py --agent claude --skill my-skill
 python3 scripts/install.py --all --copy    # copy instead of symlink
 python3 scripts/install.py --all --uninstall
 python3 scripts/check_cli_parity.py        # bin/cli.js matches the Python installer
+python3 scripts/test_package.py            # pack and install in a sandbox HOME
 ```
 
 Symlinks are the default so edits in this repo take effect immediately.
@@ -106,4 +108,5 @@ generated pointer file listing installed skills, so they can discover and open t
 ## CI
 
 `.github/workflows/validate.yml` runs on every push and PR: skill validation, the
-installer listing, the CLI parity check, a dry-run install, and `npm pack`.
+installer listing, the CLI parity check, a dry-run install, `npm pack`, and the
+end-to-end package test.
