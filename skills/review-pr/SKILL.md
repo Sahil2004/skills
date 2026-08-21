@@ -55,14 +55,16 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
    already returned all of it.
 2. **Gate on CI before reviewing anything.** Read the `## Checks` section from step 1
    first. If any context is listed `FAIL`, stop immediately: do not read the diff, do not
-   run the checklist, do not classify findings. Go straight to Outcome C below. A red
-   build makes a line-by-line review premature, since the fix will change the diff.
+   run the checklist, do not classify findings. Go straight to
+   `references/outcome-ci-failing.md`. A red build makes a line-by-line review
+   premature, since the fix will change the diff.
    `PENDING` contexts are not failures; review normally and note anything still running.
-3. **Load the open threads before auditing.** Read `## Unresolved threads` from step 1 and
-   keep that list in mind for the whole review. An unresolved thread is feedback already
-   visible to the author, so re-posting it adds noise and splits the discussion. A thread
-   that someone **resolved** is fair game again: if the underlying problem is still in the
-   code, raise it, because resolving a thread does not fix anything. See
+3. **Load the existing threads before auditing.** Read `## Unresolved threads` and
+   `## Resolved threads` from step 1 and keep both lists in mind for the whole review.
+   An unresolved thread is feedback already visible to the author, so re-posting it adds
+   noise and splits the discussion. A thread that someone **resolved** is fair game
+   again: if the underlying problem is still in the code, raise it, because resolving a
+   thread does not fix anything. See
    `references/existing-threads.md` for how to match a finding to a thread and what to do
    with a suppressed one.
 4. **Understand intent before judging code.** Read the PR description and linked
@@ -85,21 +87,10 @@ call. Never poll, never loop a command per file, and never dump raw JSON into co
 
    An open question counts as a blocker or a suggestion depending on what it gates: use
    `[Blocker]` when you cannot judge correctness without the answer.
-9. **Decide the verdict**, which determines what happens next:
-
-   | State                               | Verdict        | Action                               |
-   | ----------------------------------- | -------------- | ------------------------------------ |
-   | Any CI check failing                | **Blocked**    | Outcome C: request changes, CI only  |
-   | CI green, nothing at all            | **Clean**      | Outcome A: approve, post no comments |
-   | CI green, any finding               | **Needs work** | Outcome B: request changes           |
-
-
-   Any finding at all, down to a single nitpick, means Outcome B. Only a PR with nothing
-   to change is approved.
-10. **Place each finding at the narrowest scope that fits**, then act on the verdict.
-    See "Comment placement" below for the three tiers and the exact API calls.
-11. **Never merge or close a PR.** Approve only under a clean verdict (Outcome A);
-    request changes under Outcome B.
+9. **Pick the outcome** from the Outcomes table, read that one file, and follow it. It
+   carries the placement tiers, the comment shape, and the exact API call.
+10. **Never merge or close a PR.** Approve only under Outcome A, request changes under
+    Outcome B or C.
 
 ## Outcomes
 
@@ -143,7 +134,7 @@ These hold for every review; the outcome-specific rules live in that outcome's f
 
 Load these on demand, not up front.
 
-- `references/review-checklist.md` — the per-category checklist. Read at step 6, when
+- `references/review-checklist.md` — the per-category checklist. Read at step 7, when
   actually reviewing the diff.
 - `references/writing-comments.md` — placement tiers, the five-bullet comment structure,
   and committable suggestions. Read under Outcome B, before posting findings.
@@ -162,4 +153,4 @@ One outcome file, chosen by the verdict. Never more than one:
 
 | Script                  | Calls | Purpose                                                             |
 | ----------------------- | ----- | ------------------------------------------------------------------- |
-| `scripts/pr_context.sh` | 1     | Whole review context: meta, files, failing checks, reviews, threads |
+| `scripts/pr_context.sh` | 1     | Whole review context: meta, files, checks, reviews, open and resolved threads |
