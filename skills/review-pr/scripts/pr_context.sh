@@ -79,4 +79,11 @@ query($owner:String!, $name:String!, $pr:Int!) {
 (($p.reviewThreads.nodes | map(select(.isResolved | not))) as $t |
  if ($t | length) == 0 then "(none)"
  else ($t[] | "\(.id)\t\(.path):\(.line // 0)\(if .isOutdated then " [outdated]" else "" end)\t\(.comments.nodes[0].author.login): \(.comments.nodes[0].body | gsub("\\s+"; " ") | .[0:300])")
+ end),
+"",
+"## Resolved threads (resolving is not fixing; re-raise anything still in the diff)",
+(($p.reviewThreads.nodes | map(select(.isResolved))) as $t |
+ if ($t | length) == 0 then "(none)"
+ else ($t[0:25][] | "\(.path):\(.line // 0)\(if .isOutdated then " [outdated]" else "" end)\t\(.comments.nodes[0].author.login): \(.comments.nodes[0].body | gsub("\\s+"; " ") | .[0:200])"),
+      (if ($t | length) > 25 then "  [... \(($t | length) - 25) more resolved threads not shown]" else empty end)
  end)'
