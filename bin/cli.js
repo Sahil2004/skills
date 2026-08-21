@@ -144,6 +144,26 @@ function uninstall(dest, { dry }) {
   return "removed";
 }
 
+function installedSkills(agent) {
+  // The index must describe what is on disk, not what this run touched.
+  // Building it from the current run makes `--skill one` drop every other
+  // already-installed skill out of the managed block while its files stay
+  // in place, leaving it installed but invisible.
+  const root = expand(AGENT_TARGETS[agent]);
+  if (!fs.existsSync(root)) return [];
+  return fs
+    .readdirSync(root, { withFileTypes: true })
+    .filter((e) => (e.isDirectory() || e.isSymbolicLink()) && !e.name.startsWith("."))
+    .map((e) => {
+      const dir = path.join(root, e.name);
+      const md = path.join(dir, "SKILL.md");
+      if (!fs.existsSync(md)) return null;
+      const meta = parseFrontmatter(fs.readFileSync(md, "utf8"));
+      return meta.name ? { name: meta.name, dir, meta } : null;
+    })
+    .filter(Boolean);
+}
+
 function writePointer(agent, skills, { dry }) {
   const target = expand(POINTER_FILES[agent]);
   // Expanded, not "~": scripts/install.py writes the absolute path, and the two
@@ -294,7 +314,13 @@ function main() {
 
   for (const [agent, installed] of Object.entries(touched)) {
     if (agent in POINTER_FILES) {
-      const status = writePointer(agent, installed, { dry: args.dry });
+      // Index everything on disk, plus what this run installs. The union
+      // matters for --dry-run, where nothing has been written yet.
+      const listed = new Map();
+      for (const s of installedSkills(agent)) listed.set(s.name, s);
+      for (const s of installed) if (!listed.has(s.name)) listed.set(s.name, s);
+      const entries = [...listed.keys()].sort().map((n) => listed.get(n));
+      const status = writePointer(agent, entries, { dry: args.dry });
       console.log(`${agent.padEnd(9)} ${"(pointer index)".padEnd(24)} ${status}`);
     }
   }

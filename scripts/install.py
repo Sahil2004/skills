@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from skilllib import AGENT_TARGETS, POINTER_FILES, discover, expand
+from skilllib import AGENT_TARGETS, POINTER_FILES, discover, expand, load_skill
 
 BEGIN = "<!-- BEGIN managed skills index -->"
 END = "<!-- END managed skills index -->"
@@ -51,6 +51,29 @@ def remove(dest: Path, dry: bool) -> str:
     else:
         dest.unlink()
     return "removed"
+
+
+def installed_skills(agent: str):
+    """Every skill currently present under the agent's skills root.
+
+    The index must describe what is on disk, not what this run touched.
+    Building it from the current run makes `--skill one` drop every other
+    already-installed skill out of the managed block while its files stay
+    in place, leaving it installed but invisible.
+    """
+    root = expand(AGENT_TARGETS[agent])
+    if not root.is_dir():
+        return []
+    out = []
+    for entry in sorted(root.iterdir()):
+        if not entry.is_dir() or entry.name.startswith("."):
+            continue
+        if not (entry / "SKILL.md").is_file():
+            continue
+        skill = load_skill(entry)
+        if skill.meta.get("name"):
+            out.append(skill)
+    return out
 
 
 def write_pointer(agent: str, skills, dry: bool) -> str:
@@ -126,7 +149,13 @@ def main() -> int:
 
     for agent, installed in touched.items():
         if agent in POINTER_FILES:
-            print(f"{agent:<9} {'(pointer index)':<24} {write_pointer(agent, installed, args.dry_run)}")
+            # Index everything on disk, plus what this run installs. The union
+            # matters for --dry-run, where nothing has been written yet.
+            listed = {s.name: s for s in installed_skills(agent)}
+            for s in installed:
+                listed.setdefault(s.name, s)
+            entries = [listed[n] for n in sorted(listed)]
+            print(f"{agent:<9} {'(pointer index)':<24} {write_pointer(agent, entries, args.dry_run)}")
     return 0
 
 
