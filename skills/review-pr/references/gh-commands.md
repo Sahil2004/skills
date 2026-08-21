@@ -23,7 +23,8 @@ them over the multi-command REST sequences below.
 - every changed file with per-file `+adds/-dels`
 - CI rollup plus **only the non-passing** contexts
 - existing review verdicts
-- unresolved threads with their `threadId`
+- unresolved threads with their `threadId`, and resolved threads (capped at 25) so a
+  finding that was resolved without a fix can be re-raised
 
 Then fetch the diff once and reuse the file:
 
@@ -48,8 +49,9 @@ gh api repos/<owner/repo>/pulls/<n>/comments --paginate \
 gh pr view <n> --json commits --jq '.commits[].messageHeadline'
 ```
 
-Resolution state exists only in GraphQL; `pr_context.sh` already reports which threads are
-unresolved, so read them from its output rather than making a second request.
+Resolution state exists only in GraphQL; `pr_context.sh` already reports both the
+unresolved and the resolved threads, so read them from its output rather than making a
+second request. See `existing-threads.md` for which findings to suppress.
 
 ## Posting a review
 
