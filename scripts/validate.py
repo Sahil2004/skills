@@ -47,6 +47,17 @@ def validate(skill):
         if key not in KNOWN_KEYS:
             warnings.append(f"{d}: unknown frontmatter key '{key}'")
 
+    # jcode drops a skill whose allowed-tools is a YAML list, with no error
+    # shown anywhere: the skill simply never appears. Only the comma-separated
+    # string form loads, so treat the list form as an error rather than taste.
+    if "allowed-tools" in meta and not isinstance(meta["allowed-tools"], str):
+        got = meta["allowed-tools"]
+        as_str = ", ".join(got) if isinstance(got, list) else str(got)
+        errors.append(
+            f"{d}: allowed-tools must be a comma-separated string, not a list; "
+            f"jcode silently skips the skill otherwise. Use: allowed-tools: {as_str}"
+        )
+
     for agent in skill.agents:
         if agent != "all" and agent not in AGENT_TARGETS:
             errors.append(f"{d}: unknown agent '{agent}'")
