@@ -4,7 +4,7 @@ description: When the user wants to create, edit, review, or debug an agent skil
 version: 0.1.0
 agents: [all]
 tags: [meta, tooling]
-allowed-tools: [Bash, Read, Write, Edit]
+allowed-tools: Bash, Read, Write, Edit
 ---
 
 # Skill authoring
@@ -58,7 +58,9 @@ Do not use this when the task is ordinary coding with no skill artifact involved
 
 - `name` must be kebab-case and identical to the directory name.
 - One skill, one job. Split rather than growing a catch-all.
-- Never claim capabilities the agent lacks; state required tools in `allowed-tools`.
+- Never claim capabilities the agent lacks; state required tools in `allowed-tools`,
+  written as a comma-separated string (`allowed-tools: Bash, Read`). The YAML list form
+  parses fine but makes jcode skip the skill silently, with no error anywhere.
 - No vendor or AI attribution in any generated output.
 - Scripts under `scripts/` inside a skill must run with no third-party dependencies, or
   declare them explicitly at the top of the file.
@@ -69,6 +71,7 @@ Do not use this when the task is ordinary coding with no skill artifact involved
 | --- | --- | --- |
 | Skill never triggers | Description is a summary, not triggers | Rewrite with "When the user wants..." and literal keywords |
 | Not listed by an agent | Wrong install root | `scripts/install.py --list`, check the path exists |
+| Not listed, install root correct | `allowed-tools` written as a YAML list | Use the comma-separated string form; `validate.py` catches this |
 | Stale content | Directory was copied, not linked | Reinstall without `--copy` |
 | Validation error on name | Directory renamed | Keep `name` and directory in sync |
 

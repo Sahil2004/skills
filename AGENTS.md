@@ -16,6 +16,10 @@ scripts/skilllib.py               # shared parsing + target table
 scripts/validate.py               # schema + lint checks
 scripts/install.py                # symlink/copy into agent homes
 scripts/new_skill.py              # scaffold a new skill
+scripts/check_cli_parity.py       # bin/cli.js vs the Python installer
+scripts/test_package.py           # end-to-end npm package test in a sandbox HOME
+bin/cli.js                        # dependency-free npm/npx installer
+package.json                      # npm packaging
 ```
 
 ## Before you finish any change
@@ -23,9 +27,18 @@ scripts/new_skill.py              # scaffold a new skill
 ```bash
 python3 scripts/validate.py
 python3 scripts/install.py --all --dry-run
+python3 scripts/check_cli_parity.py
 ```
 
-Both must pass with zero errors. CI runs the same checks.
+All three must pass with zero errors. CI runs the same checks.
+
+Before publishing to npm, also run the end-to-end package test. It packs a real
+tarball and installs it into a sandboxed `HOME`, so a broken package is caught
+while the version number can still be changed:
+
+```bash
+python3 scripts/test_package.py
+```
 
 ## Adding or editing a skill
 
@@ -58,7 +71,10 @@ Both must pass with zero errors. CI runs the same checks.
   agent's rules file. Never edit inside those markers by hand; everything outside them is
   preserved.
 - If an agent's install path is wrong, fix `AGENT_TARGETS` in `scripts/skilllib.py`
-  rather than special-casing the installer.
+  rather than special-casing the installer, then mirror it in the same table in
+  `bin/cli.js`. `scripts/check_cli_parity.py` fails when the two disagree.
+- `bin/cli.js` must stay dependency-free and copy rather than symlink: it runs from an
+  npx cache that npm deletes after the run.
 
 ## Testing a skill for real
 
