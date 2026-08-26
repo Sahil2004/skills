@@ -18,6 +18,8 @@ decisions to the human one at a time.
 - "What did the reviewers say and can you fix it?"
 - "Address the comments on PR 412."
 - "Reply to these threads and mark them resolved."
+- "Address the review comments" with no PR named, while sitting in the branch's checkout
+  or worktree.
 
 Do not use this when the user wants to **review** someone else's PR and leave feedback.
 That is the `review-pr` skill.
@@ -37,6 +39,39 @@ call. Never loop a command per thread, and never dump raw JSON into context.
 
 The triage table is built first and drives everything after it. Do not start editing code
 before the table is complete.
+
+### 0. Identify the PR
+
+When the user gives a PR URL or number, use it and skip to step 1.
+
+When they do not, resolve the PR from the branch checked out in the current directory,
+which works the same in a plain clone and in a `git worktree`. `gh` reads the branch of
+the working directory it runs in:
+
+```bash
+gh pr view --json number,title,headRefName,url,state --jq '"\(.number)\t\(.state)\t\(.headRefName)\t\(.title)"'
+```
+
+Confirm the match before doing anything else: state the PR number, title, and branch back
+to the user in one line, and carry on without waiting for a reply. Then read the slug and
+number for the scripts:
+
+```bash
+gh repo view --json nameWithOwner --jq .nameWithOwner
+```
+
+Handle the ambiguous cases rather than guessing:
+
+| Situation | Do |
+| --- | --- |
+| No PR for this branch | Say so and stop. Do not open one, and do not fall back to another branch's PR. |
+| The PR is closed or merged | Say which, and ask whether to continue before fetching comments. |
+| Several PRs share the head branch | List them with number, title, and base, and ask which one. |
+| Not inside a git repo | Ask for the PR URL or number. |
+| Detached HEAD | There is no branch to match. Ask for the PR URL or number. |
+
+See `references/gh-commands.md` for the worktree details and the fallback when `gh` cannot
+infer the repository.
 
 ### 1. Fetch the open review
 
@@ -223,6 +258,9 @@ When every clear row is done:
 
 ## Rules
 
+- When no PR is named, resolve it from the current branch or worktree and say which PR you
+  picked. Never open a PR that does not exist, and never fall back to a different branch's
+  PR.
 - Build the whole table before changing any code. No edits during triage.
 - Never resolve a thread you did not address, and never resolve another reviewer's thread
   on a disagreement.
@@ -250,7 +288,8 @@ Load these on demand, not up front.
 - `references/asking-decisions.md` — the four-part question shape with a full example.
   Read at step 7.
 - `references/gh-commands.md` — batched `gh`/GraphQL recipes for reviews, threads,
-  replies, and resolution state. Read when a command needs changing.
+  replies, and resolution state, plus resolving the PR from the current branch or
+  worktree. Read at step 0, or when a command needs changing.
 
 ## Scripts
 

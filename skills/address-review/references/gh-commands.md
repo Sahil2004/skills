@@ -10,9 +10,54 @@ it does not.
 
 | Job | Do this (1 call) | Not this |
 | --- | --- | --- |
+| Find the PR for this branch | `gh pr view --json number,url,state` | `gh pr list` then filtering by hand |
 | Read the open review | `scripts/open_review.sh <owner/repo> <n>` | `gh pr view` plus `gh api .../comments --paginate` plus a call per thread |
 | Reply + resolve | `scripts/reply_thread.sh <id> "..." --resolve` | reply call, then a separate resolve call |
 | Close N threads | `scripts/resolve_thread.sh <id1> <id2> <id3>` | a `for` loop calling resolve N times |
+
+## Finding the PR when none was given
+
+`gh pr view` with no argument resolves the PR whose head is the branch checked out in the
+current directory:
+
+```bash
+gh pr view --json number,title,headRefName,url,state \
+  --jq '"\(.number)\t\(.state)\t\(.headRefName)\t\(.title)"'
+gh repo view --json nameWithOwner --jq .nameWithOwner
+```
+
+**Worktrees work unchanged.** A `git worktree` has its own `HEAD` and its own branch, and
+`gh` reads the working directory it runs in, so running the command from the worktree
+resolves that worktree's PR. Do not `cd` to the main checkout first; that resolves the
+wrong branch. Confirm with `git rev-parse --abbrev-ref HEAD` when the answer looks
+surprising, and `git worktree list` to see which directory holds which branch.
+
+Failure output is specific, so read it rather than retrying:
+
+| Output | Meaning | Do |
+| --- | --- | --- |
+| `no pull requests found for branch "x"` | The branch has no PR | Say so and stop; do not open one |
+| `no git remotes found` | Not a repo, or no remote | Ask for the PR URL or number |
+| `HEAD` as `headRefName` | Detached HEAD | Ask for the PR URL or number |
+| `state` is `CLOSED` or `MERGED` | The PR is not open | Ask before continuing |
+
+When several PRs share a head branch, `gh pr view` picks one. List them and ask instead:
+
+```bash
+gh pr list --head "$(git rev-parse --abbrev-ref HEAD)" \
+  --json number,title,baseRefName,state --limit 10
+```
+
+When `gh` cannot infer the repository (a fork, or several remotes), pass the slug
+explicitly, since `-R` changes which repository the branch is looked up in:
+
+```bash
+gh pr view "$(git rev-parse --abbrev-ref HEAD)" --repo <owner/repo> --json number,state,url
+```
+
+`gh pr view` takes the branch as a positional argument and has no `--head` flag; `--repo`
+without that positional argument fails with `argument required when using the --repo flag`.
+Only `gh pr list` accepts `--head`.
 
 ## Reading the open review
 
