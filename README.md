@@ -1,57 +1,81 @@
 # skills
 
-Portable agent skills: one source of truth, installable into Claude Code, Codex,
-Windsurf, Cursor, and any other agent that reads Markdown instructions.
+Two GitHub code-review skills for coding agents, installable into Jcode, Claude Code,
+Codex, Windsurf, Cursor, and opencode from one source of truth.
 
-## Layout
+Between them they cover both halves of a review: producing one on someone else's pull
+request, and answering the one left on yours.
 
-```
-skills/<skill-name>/SKILL.md      # required: frontmatter + instructions
-skills/<skill-name>/references/   # optional: docs loaded on demand
-skills/<skill-name>/scripts/      # optional: deterministic helpers
-templates/SKILL.md                # starting point for a new skill
-scripts/validate.py               # schema + lint checks
-scripts/install.py                # symlink/copy skills into agent homes
-scripts/new_skill.py              # scaffold a new skill
-scripts/check_cli_parity.py       # keep bin/cli.js in step with the installer
-scripts/test_package.py           # end-to-end npm package test in a sandbox HOME
-bin/cli.js                        # dependency-free npm/npx installer
-package.json                      # npm packaging
-```
+| Skill | Use it when |
+| --- | --- |
+| [`review-pr`](skills/review-pr/) | You are reviewing **someone else's** PR and leaving feedback |
+| [`address-review`](skills/address-review/) | You are answering the review on **your own** PR |
 
-## Agent instructions
+Both require `gh`, authenticated. Both hold to one API call per job: every bundled script
+makes exactly one request, so a review never turns into a per-file or per-thread loop.
 
-`AGENTS.md` at the repo root is the contributor guide for agents working *in* this repo.
-`CLAUDE.md`, `GEMINI.md`, and `.windsurfrules` are symlinks to it, and
-`.cursor/rules/repo.mdc` points at it, so every agent reads one source of truth.
+## review-pr
 
-Do not confuse this with `skills/` — those are the portable skills this repo ships to
-other projects.
+Review a pull request, then either approve it cleanly or post structured,
+severity-classified feedback.
 
-## SKILL.md format
+Triggers on "review PR 412", a pasted pull request URL, "is this safe to merge?", or
+"approve this if it's fine".
 
-YAML frontmatter, then Markdown body:
+- **One call loads everything**: metadata, file churn, CI status, existing reviews, and
+  open threads come back together from `pr_context.sh`.
+- **CI gates the review.** A failing check ends it immediately, before the diff is read,
+  because the fix will change the diff anyway.
+- **Existing threads are respected.** A finding another reviewer already has open is
+  suppressed rather than re-posted. A thread resolved without the code changing is fair
+  game again.
+- **Every finding is classified** `[Blocker]`, `[Suggestion]` or `[Nitpick]`, and placed
+  at the narrowest scope that fits: inline, on the file, or in the review body.
+- **Exactly one outcome** applies, and only that outcome's file is read. A clean PR is
+  approved with no comments attached; any finding at all, down to a single nitpick, is a
+  request for changes.
+- Never merges or closes a PR. Never approves to be agreeable: an unverified category is
+  not clean.
 
-```yaml
----
-name: my-skill              # kebab-case, matches directory name
-description: When the user wants X. Also use when the user mentions "x", "y".
-version: 0.1.0
-agents: [claude, codex, windsurf, cursor]   # or [all]
-tags: [category]
-allowed-tools: [Bash, Read, Write]   # optional hint
----
-```
+## address-review
 
-`description` is the routing signal: write it as trigger conditions, not a summary.
+Work through the open review comments on your own PR: triage them all into a table, fix
+everything that needs no human input, then bring the blockers and the judgement calls
+back one at a time.
+
+Triggers on "address the comments on PR 412", "reply to these threads", "what did the
+reviewers say and can you fix it?", or the same request with no PR named at all.
+
+- **Finds the PR itself** when you do not name one, from the branch in the current
+  directory. Worktrees work unchanged. Missing, closed and ambiguous PRs are handled
+  explicitly rather than guessed at.
+- **Triage before edits.** Every comment lands in a table before any code changes:
+
+  | comment | severity | needsChanges | anyBlockers | anyDecisions |
+  | --- | --- | --- | --- | --- |
+
+  Praise is classified first and needs no work. A blocker is something external and
+  concrete; a decision is a choice with two defensible answers. Anything the codebase
+  already settles is neither, and is not worth a question.
+- **Clear rows run immediately** — no blockers, no decisions — ordered by severity, with
+  speed only as a tiebreak. Severity always beats easiness. One worker per row where
+  orchestration is available.
+- **Blockers are reported while that work runs**, linked to tracked issues where a
+  tracker is connected.
+- **Decisions are asked one at a time**, written so someone with no context on the
+  product can answer: the problem, the context, the options, the tradeoff, and a
+  recommendation. Each answer dispatches its row while the next question is asked.
+- **Deferred items are parked, never resolved**, and are written into the PR description
+  and any linked issue at the end, naming what each one waits on.
 
 ## Install
 
 No clone required. With Node 16+:
 
 ```bash
-npx @sahil2004/skills --all                       # every skill, every agent it declares
+npx @sahil2004/skills --all                       # both skills, every agent they declare
 npx @sahil2004/skills --skill review-pr           # one skill
+npx @sahil2004/skills --skill address-review
 npx @sahil2004/skills --agent claude --all        # one agent
 npx @sahil2004/skills --list                      # show skills and target directories
 npx @sahil2004/skills --all --dry-run             # preview without writing
@@ -65,26 +89,18 @@ npx github:Sahil2004/skills --all
 ```
 
 The npm CLI copies files, so an install survives npm clearing its cache. Working in a
-clone instead? Use the Python installer below; it symlinks by default, so edits take
-effect immediately.
-
-## Usage
+clone instead? Use the Python installer; it symlinks by default, so edits take effect
+immediately.
 
 ```bash
-python3 scripts/new_skill.py my-skill      # scaffold
-python3 scripts/validate.py                # validate all skills
 python3 scripts/install.py --list          # show targets and status
 python3 scripts/install.py --all           # install everything, everywhere
-python3 scripts/install.py --agent claude --skill my-skill
+python3 scripts/install.py --agent claude --skill address-review
 python3 scripts/install.py --all --copy    # copy instead of symlink
 python3 scripts/install.py --all --uninstall
-python3 scripts/check_cli_parity.py        # bin/cli.js matches the Python installer
-python3 scripts/test_package.py            # pack and install in a sandbox HOME
 ```
 
-Symlinks are the default so edits in this repo take effect immediately.
-
-## Install targets
+### Install targets
 
 | Agent | Path |
 | --- | --- |
@@ -98,15 +114,49 @@ Symlinks are the default so edits in this repo take effect immediately.
 Agents that only read a single rules file (older Codex/Windsurf/Cursor) also get a
 generated pointer file listing installed skills, so they can discover and open them.
 
-## Writing good skills
+## Using a skill
 
-- Trigger-first description; include the words a user would actually say.
-- Keep `SKILL.md` under ~500 lines; push detail into `references/`.
-- Prefer deterministic scripts over prose when a step is mechanical.
-- No agent-vendor attribution anywhere in output.
+Installed skills load on their own. Describe the job in your own words and the agent
+picks the skill from its trigger conditions:
 
-## CI
+> Review PR 412.
 
-`.github/workflows/validate.yml` runs on every push and PR: skill validation, the
-installer listing, the CLI parity check, a dry-run install, `npm pack`, and the
-end-to-end package test.
+> Address the review comments.
+
+Naming the skill directly works too, in agents that support it: `/review-pr`,
+`/address-review`.
+
+## Layout
+
+```
+skills/review-pr/SKILL.md         # review someone else's PR
+skills/review-pr/references/      # checklist, comment style, one file per outcome
+skills/review-pr/scripts/         # pr_context.sh
+
+skills/address-review/SKILL.md    # answer the review on your own PR
+skills/address-review/references/ # triage table, dispatch, asking decisions
+skills/address-review/scripts/    # open_review.sh, reply_thread.sh, resolve_thread.sh
+```
+
+Each `SKILL.md` carries the workflow; `references/` holds the detail, loaded only when a
+step needs it. Scripts stay deterministic so the agent is not left to compose GraphQL by
+hand.
+
+## Contributing
+
+`AGENTS.md` at the repo root is the contributor guide for agents working *in* this repo.
+`CLAUDE.md`, `GEMINI.md`, and `.windsurfrules` are symlinks to it, and
+`.cursor/rules/repo.mdc` points at it, so every agent reads one source of truth.
+
+Adding a skill starts from `templates/SKILL.md` via `scripts/new_skill.py`. Before
+finishing any change:
+
+```bash
+python3 scripts/validate.py                # schema + lint checks
+python3 scripts/install.py --all --dry-run # installer still resolves every target
+python3 scripts/check_cli_parity.py        # bin/cli.js matches the Python installer
+python3 scripts/test_package.py            # pack and install in a sandbox HOME
+```
+
+`.github/workflows/validate.yml` runs the same checks on every push and PR, plus
+`npm pack`.
