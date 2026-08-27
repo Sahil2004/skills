@@ -73,13 +73,13 @@ reviewers say and can you fix it?", or the same request with no PR named at all.
 No clone required. With Node 16+:
 
 ```bash
-npx @sahil2004/skills --all                       # both skills, every agent they declare
-npx @sahil2004/skills --skill review-pr           # one skill
-npx @sahil2004/skills --skill address-review
-npx @sahil2004/skills --agent claude --all        # one agent
-npx @sahil2004/skills --list                      # show skills and target directories
-npx @sahil2004/skills --all --dry-run             # preview without writing
-npx @sahil2004/skills --all --uninstall           # remove
+npx @sahilgarg2004/skills --all                       # both skills, every agent they declare
+npx @sahilgarg2004/skills --skill review-pr           # one skill
+npx @sahilgarg2004/skills --skill address-review
+npx @sahilgarg2004/skills --agent claude --all        # one agent
+npx @sahilgarg2004/skills --list                      # show skills and target directories
+npx @sahilgarg2004/skills --all --dry-run             # preview without writing
+npx @sahilgarg2004/skills --all --uninstall           # remove
 ```
 
 Straight from GitHub, without the registry:

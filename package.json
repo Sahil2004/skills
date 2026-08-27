@@ -1,9 +1,9 @@
 {
-  "name": "@sahil2004/skills",
+  "name": "@sahilgarg2004/skills",
   "version": "0.1.0",
   "description": "Portable agent skills installable into Claude Code, Codex, Jcode, Windsurf, Cursor, and opencode.",
   "bin": {
-    "sahil2004-skills": "bin/cli.js"
+    "sahilgarg2004-skills": "bin/cli.js"
   },
   "type": "commonjs",
   "engines": {

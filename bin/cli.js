@@ -223,15 +223,15 @@ function parseArgs(argv) {
   return out;
 }
 
-const USAGE = `sahil2004-skills — install portable agent skills
+const USAGE = `sahilgarg2004-skills — install portable agent skills
 
 Usage:
-  npx @sahil2004/skills --all               install every skill for every agent it declares
-  npx @sahil2004/skills --skill review-pr   install one skill
-  npx @sahil2004/skills --agent claude      restrict to one agent (repeatable)
-  npx @sahil2004/skills --list              show skills and target directories
-  npx @sahil2004/skills --all --dry-run     show what would happen
-  npx @sahil2004/skills --all --uninstall   remove installed skills
+  npx @sahilgarg2004/skills --all               install every skill for every agent it declares
+  npx @sahilgarg2004/skills --skill review-pr   install one skill
+  npx @sahilgarg2004/skills --agent claude      restrict to one agent (repeatable)
+  npx @sahilgarg2004/skills --list              show skills and target directories
+  npx @sahilgarg2004/skills --all --dry-run     show what would happen
+  npx @sahilgarg2004/skills --all --uninstall   remove installed skills
 
 Flags:
   --force      overwrite an existing install

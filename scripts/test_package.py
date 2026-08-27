@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from skilllib import AGENT_TARGETS, POINTER_FILES, REPO_ROOT, discover
 
-BIN_NAME = "sahil2004-skills"
+BIN_NAME = "sahilgarg2004-skills"
 MANAGED_BEGIN = "BEGIN managed skills index"
 
 
