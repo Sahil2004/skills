@@ -1,0 +1,12 @@
+{
+  "name": "sahilgarg2004",
+  "owner": { "name": "Sahil Garg" },
+  "interface": { "displayName": "Sahil Garg Skills" },
+  "plugins": [
+    {
+      "name": "skills",
+      "source": "./",
+      "description": "GitHub code-review skills: review-pr and address-review."
+    }
+  ]
+}
