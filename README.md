@@ -70,6 +70,20 @@ reviewers say and can you fix it?", or the same request with no PR named at all.
 
 ## Install
 
+### Claude Code plugin
+
+Inside Claude Code, no Node or clone needed:
+
+```
+/plugin marketplace add Sahil2004/skills
+/plugin install skills@sahilgarg2004
+```
+
+Skills then load as `skills:review-pr` and `skills:address-review`. Update with
+`/plugin marketplace update sahilgarg2004`.
+
+### npm (every agent)
+
 No clone required. With Node 16+:
 
 ```bash
