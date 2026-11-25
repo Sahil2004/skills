@@ -70,6 +70,31 @@ reviewers say and can you fix it?", or the same request with no PR named at all.
 
 ## Install
 
+### Claude Code plugin
+
+Inside Claude Code, no Node or clone needed:
+
+```
+/plugin marketplace add Sahil2004/skills
+/plugin install skills@sahilgarg2004
+```
+
+Skills then load as `skills:review-pr` and `skills:address-review`. Update with
+`/plugin marketplace update sahilgarg2004`.
+
+### Codex plugin
+
+With Codex CLI 0.121 or later, no Node or clone needed:
+
+```bash
+codex plugin marketplace add Sahil2004/skills
+codex plugin add skills@sahilgarg2004
+```
+
+Or run `/plugins` inside Codex and pick it from the list. Start a new session afterwards.
+
+### npm (every agent)
+
 No clone required. With Node 16+:
 
 ```bash

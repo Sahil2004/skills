@@ -1,0 +1,17 @@
+{
+  "name": "sahilgarg2004",
+  "owner": {
+    "name": "Sahil Garg"
+  },
+  "metadata": {
+    "description": "Portable GitHub code-review skills for coding agents."
+  },
+  "plugins": [
+    {
+      "name": "skills",
+      "source": "./",
+      "description": "GitHub code-review skills: review-pr and address-review.",
+      "strict": false
+    }
+  ]
+}

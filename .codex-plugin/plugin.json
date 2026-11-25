@@ -1,0 +1,6 @@
+{
+  "name": "skills",
+  "version": "0.1.0",
+  "description": "GitHub code-review skills: review-pr and address-review.",
+  "skills": ["./skills/"]
+}
